@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { SignalLogo } from "@/components/SignalLogo";
+import { Toaster } from "@/components/ui/Toaster";
 import { useSession } from "@/lib/store/session";
 import { useRealtime } from "@/lib/ws/useRealtime";
 
@@ -29,5 +30,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <Toaster />
+    </>
+  );
 }
