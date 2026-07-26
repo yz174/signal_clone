@@ -1,0 +1,37 @@
+{
+  "name": "signal-clone",
+  "private": true,
+  "description": "Secure messaging platform (Signal clone): FastAPI backend, Next.js PWA frontend",
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,magenta \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd backend && uv run uvicorn app.main:app --reload --port 8000",
+    "dev:web": "npm --prefix frontend run dev",
+    "test": "cd backend && uv run pytest",
+    "lint": "npm run lint:api && npm run lint:web",
+    "lint:api": "cd backend && uv run ruff check . && uv run ruff format --check .",
+    "lint:web": "npm --prefix frontend run lint",
+    "typecheck": "npm run typecheck:api && npm run typecheck:web",
+    "typecheck:api": "cd backend && uv run mypy app",
+    "typecheck:web": "npm --prefix frontend run typecheck",
+    "seed": "cd backend && uv run python -m app.seed",
+    "migrate": "cd backend && uv run alembic upgrade head",
+    "check:pg": "cd backend && uv run python scripts/check_postgres.py",
+    "verify": "npm run lint && npm run typecheck && npm test",
+    "check:redis": "cd backend && uv run python scripts/check_redis_fanout.py",
+    "gen:openapi": "cd backend && uv run python scripts/export_openapi.py",
+    "gen:client": "npm run gen:openapi && npm --prefix frontend run gen:types",
+    "check:ui": "cd backend && uv run python scripts/check_ui.py",
+    "check:shell": "cd backend && uv run python scripts/check_shell.py",
+    "check:realtime": "cd backend && uv run python scripts/check_realtime_ui.py",
+    "check:groups": "cd backend && uv run python scripts/check_groups_ui.py",
+    "build:web": "npm --prefix frontend run build",
+    "check:bonus": "cd backend && uv run python scripts/check_bonus_ui.py",
+    "check:attachments": "cd backend && uv run python scripts/check_attachments_ui.py",
+    "check:pwa": "cd backend && uv run python scripts/check_pwa.py",
+    "icons": "cd backend && uv run python scripts/make_icons.py",
+    "check:litestream": "cd backend && uv run python scripts/check_litestream.py"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

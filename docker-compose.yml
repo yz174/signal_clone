@@ -1,0 +1,26 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build: ./backend
+    environment:
+      JWT_SECRET: local-development-secret-at-least-32-bytes
+      DATABASE_URL: sqlite+aiosqlite:////data/signal.db
+      CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
+      EVENT_BUS: redis
+      REDIS_URL: redis://redis:6379/0
+      SEED_ON_BOOT: "true"
+    volumes:
+      - api-data:/data
+    depends_on:
+      - redis
+    deploy:
+      replicas: 2
+    ports:
+      - "8000-8001:8000"
+
+volumes:
+  api-data:

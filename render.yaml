@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: signal-clone-api
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:////data/signal.db
+      - key: DB_PATH
+        value: /data/signal.db
+      - key: SEED_ON_BOOT
+        value: "true"
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: STORAGE_BACKEND
+        value: supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: attachments
+      - key: SUPABASE_S3_ENDPOINT
+        sync: false
+      - key: LITESTREAM_BUCKET
+        value: signal-db
+      - key: LITESTREAM_ACCESS_KEY_ID
+        sync: false
+      - key: LITESTREAM_SECRET_ACCESS_KEY
+        sync: false
