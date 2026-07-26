@@ -5,6 +5,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.models import MessageKind
 
 
+class ReactionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    user_id: str
+    emoji: str
+
+
 class MessageOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -20,6 +27,7 @@ class MessageOut(BaseModel):
     edited_at: datetime | None
     deleted_at: datetime | None
     expires_at: datetime | None
+    reactions: list[ReactionOut] = []
 
 
 class MessagePageOut(BaseModel):
@@ -31,6 +39,10 @@ class MessageCreate(BaseModel):
     client_message_id: str = Field(min_length=1, max_length=64)
     body: str = Field(min_length=1, max_length=4096)
     reply_to_id: str | None = None
+
+
+class ReactionIn(BaseModel):
+    emoji: str = Field(min_length=1, max_length=16)
 
 
 class ReadReceiptIn(BaseModel):
