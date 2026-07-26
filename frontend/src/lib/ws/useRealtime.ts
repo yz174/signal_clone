@@ -29,11 +29,17 @@ function handle(event: ServerEvent): void {
       break;
     }
 
-    case "message.deleted":
-      chat.applyDeletedMessage(
+    case "message.reaction":
+      chat.applyReaction(
         payload.conversation_id as string,
         payload.message_id as string,
+        payload.user_id as string,
+        (payload.emoji as string | null) ?? null,
       );
+      break;
+
+    case "message.deleted":
+      chat.applyDeletedMessage(payload.conversation_id as string, payload.message_id as string);
       break;
 
     case "receipt.updated":
