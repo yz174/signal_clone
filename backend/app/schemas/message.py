@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models import MessageKind
+from app.models import AttachmentKind, MessageKind
 
 
 class ReactionOut(BaseModel):
@@ -10,6 +10,18 @@ class ReactionOut(BaseModel):
 
     user_id: str
     emoji: str
+
+
+class AttachmentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    kind: AttachmentKind
+    url: str
+    mime_type: str
+    size_bytes: int
+    width: int | None
+    height: int | None
 
 
 class MessageOut(BaseModel):
@@ -28,6 +40,7 @@ class MessageOut(BaseModel):
     deleted_at: datetime | None
     expires_at: datetime | None
     reactions: list[ReactionOut] = []
+    attachments: list[AttachmentOut] = []
 
 
 class MessagePageOut(BaseModel):
@@ -37,8 +50,9 @@ class MessagePageOut(BaseModel):
 
 class MessageCreate(BaseModel):
     client_message_id: str = Field(min_length=1, max_length=64)
-    body: str = Field(min_length=1, max_length=4096)
+    body: str = Field(default="", max_length=4096)
     reply_to_id: str | None = None
+    attachment_ids: list[str] = []
 
 
 class ReactionIn(BaseModel):

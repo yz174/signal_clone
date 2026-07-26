@@ -66,8 +66,11 @@ class Message(Base, IdMixin):
 class Attachment(Base, IdMixin):
     __tablename__ = "attachments"
 
-    message_id: Mapped[str] = mapped_column(
-        String(ID_LENGTH), ForeignKey("messages.id", ondelete="CASCADE"), index=True
+    message_id: Mapped[str | None] = mapped_column(
+        String(ID_LENGTH), ForeignKey("messages.id", ondelete="CASCADE"), index=True, default=None
+    )
+    uploaded_by: Mapped[str | None] = mapped_column(
+        String(ID_LENGTH), ForeignKey("users.id", ondelete="SET NULL"), default=None
     )
     kind: Mapped[AttachmentKind] = mapped_column(enum_column(AttachmentKind, "attachment_kind"))
     url: Mapped[str] = mapped_column(Text)

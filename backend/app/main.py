@@ -1,8 +1,10 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.health import router as health_router
 from app.api.v1 import api_router
@@ -51,6 +53,11 @@ def create_app() -> FastAPI:
 
     register_error_handlers(app)
     register_rate_limiting(app)
+
+    if settings.storage_backend == "local":
+        uploads = Path(settings.upload_dir)
+        uploads.mkdir(parents=True, exist_ok=True)
+        app.mount("/uploads", StaticFiles(directory=uploads), name="uploads")
 
     app.include_router(health_router)
     app.include_router(websocket_router)
