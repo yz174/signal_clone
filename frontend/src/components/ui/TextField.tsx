@@ -9,11 +9,11 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 export function TextField({ label, hint, error, className = "", ...props }: TextFieldProps) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-medium tracking-wide text-muted uppercase">
+      <span className="text-muted mb-1.5 block text-xs font-medium tracking-wide uppercase">
         {label}
       </span>
       <input
-        className={`h-12 w-full rounded-lg border bg-surface px-4 text-base text-body transition outline-none placeholder:text-faint focus:border-accent ${
+        className={`bg-surface text-body placeholder:text-faint focus:border-accent h-12 w-full rounded-lg border px-4 text-base transition outline-none ${
           error ? "border-[#be0404]" : "border-line-strong"
         } ${className}`}
         {...props}
@@ -21,7 +21,7 @@ export function TextField({ label, hint, error, className = "", ...props }: Text
       {error ? (
         <span className="mt-1.5 block text-sm text-[#be0404]">{error}</span>
       ) : hint ? (
-        <span className="mt-1.5 block text-sm text-muted">{hint}</span>
+        <span className="text-muted mt-1.5 block text-sm">{hint}</span>
       ) : null}
     </label>
   );
