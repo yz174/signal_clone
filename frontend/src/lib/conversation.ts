@@ -17,12 +17,16 @@ export function titleOf(conversation: Conversation, viewerId: string): string {
 export function avatarOf(
   conversation: Conversation,
   viewerId: string,
-): { color: string | null; imageUrl: string | null } {
+): { color: string | null; imageUrl: string | null; group: boolean } {
   if (conversation.type === "group") {
-    return { color: "A200", imageUrl: conversation.avatar_url };
+    return { color: "A200", imageUrl: conversation.avatar_url, group: true };
   }
   const [peer] = peersOf(conversation, viewerId);
-  return { color: peer?.user.avatar_color ?? null, imageUrl: peer?.user.avatar_url ?? null };
+  return {
+    color: peer?.user.avatar_color ?? null,
+    imageUrl: peer?.user.avatar_url ?? null,
+    group: false,
+  };
 }
 
 export function previewOf(

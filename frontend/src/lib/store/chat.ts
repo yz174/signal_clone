@@ -3,7 +3,8 @@
 import { create } from "zustand";
 
 import { api } from "@/lib/api/client";
-import type { Conversation, LocalMessage, Message } from "@/lib/api/types";
+import type { Conversation, LocalMessage, MemberRole, Message } from "@/lib/api/types";
+import { notify } from "@/lib/store/toast";
 
 interface Thread {
   messages: LocalMessage[];
@@ -28,6 +29,14 @@ interface ChatState {
   retryMessage: (conversationId: string, clientMessageId: string) => Promise<void>;
   markRead: (conversationId: string) => Promise<void>;
 
+  startDirect: (userId: string) => Promise<Conversation>;
+  startGroup: (name: string, memberIds: string[]) => Promise<Conversation>;
+  renameGroup: (conversationId: string, name: string) => Promise<void>;
+  addMembers: (conversationId: string, userIds: string[]) => Promise<void>;
+  setMemberRole: (conversationId: string, memberId: string, role: MemberRole) => Promise<void>;
+  removeMember: (conversationId: string, memberId: string) => Promise<void>;
+  forgetConversation: (conversationId: string) => void;
+
   applyIncomingMessage: (conversationId: string, message: Message) => void;
   applyDeletedMessage: (conversationId: string, messageId: string) => void;
   applyReceipt: (
@@ -37,6 +46,7 @@ interface ChatState {
     lastDeliveredSeq: number,
   ) => void;
   recoverMissedMessages: () => Promise<void>;
+  upsertConversation: (conversation: Conversation) => void;
 
   threadFor: (conversationId: string) => Thread;
 }
@@ -70,6 +80,7 @@ export const useChat = create<ChatState>((set, get) => ({
       set({ conversations: sortByActivity(page.items), loadingConversations: false });
     } catch {
       set({ error: "Could not load conversations", loadingConversations: false });
+      notify("Could not load your chats", "error");
     }
   },
 
@@ -187,8 +198,61 @@ export const useChat = create<ChatState>((set, get) => ({
           },
         },
       }));
+      notify("Message failed to send. Tap it to retry.", "error");
     }
   },
+
+  startDirect: async (userId) => {
+    const conversation = await api.createDirect(userId);
+    get().upsertConversation(conversation);
+    return conversation;
+  },
+
+  startGroup: async (name, memberIds) => {
+    const conversation = await api.createGroup(name, memberIds);
+    get().upsertConversation(conversation);
+    return conversation;
+  },
+
+  renameGroup: async (conversationId, name) => {
+    get().upsertConversation(await api.updateConversation(conversationId, { name }));
+  },
+
+  addMembers: async (conversationId, userIds) => {
+    get().upsertConversation(await api.addMembers(conversationId, userIds));
+  },
+
+  setMemberRole: async (conversationId, memberId, role) => {
+    get().upsertConversation(await api.setMemberRole(conversationId, memberId, role));
+  },
+
+  removeMember: async (conversationId, memberId) => {
+    await api.removeMember(conversationId, memberId);
+    const refreshed = await api.getConversation(conversationId).catch(() => null);
+    if (refreshed) {
+      get().upsertConversation(refreshed);
+    } else {
+      get().forgetConversation(conversationId);
+    }
+  },
+
+  forgetConversation: (conversationId) =>
+    set((state) => {
+      const threads = { ...state.threads };
+      delete threads[conversationId];
+      return {
+        threads,
+        conversations: state.conversations.filter((entry) => entry.id !== conversationId),
+      };
+    }),
+
+  upsertConversation: (conversation) =>
+    set((state) => ({
+      conversations: sortByActivity([
+        ...state.conversations.filter((entry) => entry.id !== conversation.id),
+        conversation,
+      ]),
+    })),
 
   applyIncomingMessage: (conversationId, message) => {
     set((state) => {

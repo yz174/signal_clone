@@ -7,6 +7,7 @@ import type { Message } from "@/lib/api/types";
 import { useChat } from "@/lib/store/chat";
 import { usePresence } from "@/lib/store/presence";
 import { useSession } from "@/lib/store/session";
+import { notify } from "@/lib/store/toast";
 import { type ServerEvent, realtime } from "@/lib/ws/client";
 
 function handle(event: ServerEvent): void {
@@ -75,7 +76,10 @@ export function useRealtime(): void {
     if (!token) return;
 
     const stopEvents = realtime.onEvent(handle);
+    let everConnected = false;
     const stopOpen = realtime.onOpen(() => {
+      if (everConnected) notify("Reconnected");
+      everConnected = true;
       void useChat.getState().recoverMissedMessages();
     });
 
