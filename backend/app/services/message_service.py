@@ -11,6 +11,8 @@ from app.db.base import utcnow
 from app.models import Conversation, ConversationMember, Message, MessageKind, User
 from app.realtime.bus import EventBus
 from app.realtime.events import Event, EventType
+from app.schemas.message import MessageOut
+from app.services.attachment_service import claim_attachments
 from app.services.membership import peer_ids, require_membership
 
 MAX_PAGE_SIZE = 100
@@ -34,6 +36,7 @@ class MessageService:
         client_message_id: str,
         body: str,
         reply_to_id: str | None,
+        attachment_ids: list[str] | None = None,
     ) -> Message:
         await require_membership(self._session, conversation_id, user.id)
 
@@ -44,6 +47,9 @@ class MessageService:
         conversation = await self._session.get(Conversation, conversation_id)
         if conversation is None:
             raise NotFoundError("Conversation not found")
+
+        if not body.strip() and not attachment_ids:
+            raise ValidationError("A message needs text or an attachment")
 
         if reply_to_id is not None:
             await self._require_message_in(conversation_id, reply_to_id)
@@ -67,8 +73,15 @@ class MessageService:
             ),
         )
         message.reactions = []
+        message.attachments = []
         self._session.add(message)
         await self._session.flush()
+
+        if attachment_ids:
+            message.attachments = await claim_attachments(
+                self._session, user, attachment_ids, message.id
+            )
+            message.kind = MessageKind.MEDIA
 
         conversation.last_message_id = message.id
         await self._bump_unread(conversation_id, sender_id=user.id)
@@ -104,7 +117,7 @@ class MessageService:
         query = (
             select(Message)
             .where(Message.conversation_id == conversation_id)
-            .options(selectinload(Message.reactions))
+            .options(selectinload(Message.reactions), selectinload(Message.attachments))
         )
 
         if after_seq is not None:
@@ -191,7 +204,9 @@ class MessageService:
 
     async def _load(self, message_id: str) -> Message:
         message = await self._session.scalar(
-            select(Message).where(Message.id == message_id).options(selectinload(Message.reactions))
+            select(Message)
+            .where(Message.id == message_id)
+            .options(selectinload(Message.reactions), selectinload(Message.attachments))
         )
         if message is None:
             raise NotFoundError("Message not found")
@@ -257,17 +272,4 @@ class MessageService:
 
 
 def _message_payload(message: Message) -> dict[str, object]:
-    return {
-        "id": message.id,
-        "conversation_id": message.conversation_id,
-        "seq": message.seq,
-        "sender_id": message.sender_id,
-        "kind": message.kind.value,
-        "body": message.body,
-        "reply_to_id": message.reply_to_id,
-        "client_message_id": message.client_message_id,
-        "created_at": message.created_at.isoformat(),
-        "edited_at": message.edited_at.isoformat() if message.edited_at else None,
-        "deleted_at": message.deleted_at.isoformat() if message.deleted_at else None,
-        "expires_at": message.expires_at.isoformat() if message.expires_at else None,
-    }
+    return MessageOut.model_validate(message).model_dump(mode="json")
