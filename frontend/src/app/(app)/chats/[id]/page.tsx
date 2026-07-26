@@ -8,6 +8,7 @@ import { Composer } from "@/components/chat/Composer";
 import { MessageList } from "@/components/chat/MessageList";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { ConversationDetails } from "@/components/modals/ConversationDetails";
+import type { LocalMessage } from "@/lib/api/types";
 import { useChat } from "@/lib/store/chat";
 import { usePresence } from "@/lib/store/presence";
 import { useSession } from "@/lib/store/session";
@@ -18,9 +19,23 @@ const TYPING_THROTTLE_MS = 3000;
 export default function ConversationPage() {
   const { id } = useParams<{ id: string }>();
   const viewer = useSession((state) => state.user);
-  const { conversations, threads, openConversation, loadOlder, sendMessage, markRead } = useChat();
+  const {
+    conversations,
+    threads,
+    openConversation,
+    loadOlder,
+    sendMessage,
+    markRead,
+    toggleReaction,
+    deleteMessage,
+    retryMessage,
+    setViewerId,
+  } = useChat();
   const typing = usePresence((state) => state.typing);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [reply, setReply] = useState<{ conversationId: string; message: LocalMessage } | null>(
+    null,
+  );
   const lastTypingSentAt = useRef(0);
 
   const conversation = useMemo(
@@ -29,9 +44,14 @@ export default function ConversationPage() {
   );
 
   useEffect(() => {
+    if (viewer) setViewerId(viewer.id);
+  }, [viewer, setViewerId]);
+
+  useEffect(() => {
     if (id) void openConversation(id);
   }, [id, openConversation]);
 
+  const replyTo = reply?.conversationId === id ? reply.message : null;
   const thread = threads[id];
   const newestSeq = thread?.messages.at(-1)?.seq ?? 0;
 
@@ -61,8 +81,8 @@ export default function ConversationPage() {
 
   if (!conversation) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-surface-raised">
-        <p className="text-sm text-faint">Loading conversation…</p>
+      <div className="bg-surface-raised flex flex-1 items-center justify-center">
+        <p className="text-faint text-sm">Loading conversation…</p>
       </div>
     );
   }
@@ -70,7 +90,7 @@ export default function ConversationPage() {
   const current = thread ?? { messages: [], hasMore: false, loading: false };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-surface">
+    <div className="bg-surface flex min-h-0 flex-1 flex-col">
       <ChatHeader
         conversation={conversation}
         viewerId={viewer.id}
@@ -85,11 +105,23 @@ export default function ConversationPage() {
         hasMore={current.hasMore}
         loading={current.loading}
         onLoadOlder={() => void loadOlder(id)}
+        onReact={(messageId, emoji) => void toggleReaction(id, messageId, emoji)}
+        onReply={(message) => setReply({ conversationId: id, message })}
+        onDelete={(messageId) => void deleteMessage(id, messageId)}
+        onRetry={(clientMessageId) => void retryMessage(id, clientMessageId)}
       />
 
       <TypingIndicator names={typistNames} />
 
-      <Composer onSend={(body) => sendMessage(id, body)} onTyping={announceTyping} />
+      <Composer
+        replyTo={replyTo}
+        onCancelReply={() => setReply(null)}
+        onSend={async (body) => {
+          await sendMessage(id, body, replyTo?.id);
+          setReply(null);
+        }}
+        onTyping={announceTyping}
+      />
 
       {detailsOpen && (
         <ConversationDetails
