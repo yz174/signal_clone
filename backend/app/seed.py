@@ -14,9 +14,11 @@ from app.models import (
     ConversationMember,
     ConversationType,
     MemberRole,
+    Message,
     User,
     direct_key_for,
 )
+from app.services.message_service import MessageService
 
 SEED_PEOPLE = [
     ("+15550100001", "ava", "Ava Mitchell", "Building things on the internet"),
@@ -41,17 +43,41 @@ SEED_GROUPS = [
 ]
 
 
+SEED_SCRIPTS = [
+    [
+        "hey, are we still on for tomorrow?",
+        "yes! same place, 7pm",
+        "perfect. I'll book the table",
+        "you're a hero",
+    ],
+    [
+        "sent you the draft just now",
+        "got it, reading through",
+        "the second section needs work I think",
+        "agreed, I'll rewrite it tonight",
+        "no rush, tomorrow is fine",
+    ],
+    [
+        "did you see the release notes?",
+        "skimmed them, the migration bit worries me",
+        "same. let's pair on it in the morning",
+    ],
+]
+
+
 @dataclass(frozen=True)
 class SeedSummary:
     users: int
     contacts: int
     conversations: int
     memberships: int
+    messages: int
 
     def __str__(self) -> str:
         return (
             f"{self.users} users, {self.contacts} contacts, "
-            f"{self.conversations} conversations, {self.memberships} memberships"
+            f"{self.conversations} conversations, {self.memberships} memberships, "
+            f"{self.messages} messages"
         )
 
 
@@ -132,6 +158,49 @@ def _build_contacts(people: dict[str, User]) -> list[Contact]:
     return contacts
 
 
+async def _seed_messages(
+    session: AsyncSession,
+    people: dict[str, User],
+    conversations: list[Conversation],
+) -> int:
+    service = MessageService(session)
+    sent = 0
+
+    for index, conversation in enumerate(conversations):
+        script = SEED_SCRIPTS[index % len(SEED_SCRIPTS)]
+        speakers = [
+            member.user_id
+            for member in sorted(conversation.members, key=lambda member: member.user_id)
+        ]
+        by_id = {user.id: user for user in people.values()}
+
+        for turn, line in enumerate(script):
+            speaker = by_id[speakers[turn % len(speakers)]]
+            await service.send(
+                user=speaker,
+                conversation_id=conversation.id,
+                client_message_id=f"seed-{conversation.id}-{turn}",
+                body=line,
+                reply_to_id=None,
+            )
+            sent += 1
+
+        await _backdate(session, conversation, minutes=(index + 1) * 37)
+
+    await session.commit()
+    return sent
+
+
+async def _backdate(session: AsyncSession, conversation: Conversation, minutes: int) -> None:
+    offset = timedelta(minutes=minutes)
+    messages = await session.scalars(
+        select(Message).where(Message.conversation_id == conversation.id)
+    )
+    for position, message in enumerate(messages):
+        message.created_at = message.created_at - offset + timedelta(minutes=position * 2)
+    conversation.last_activity_at = conversation.last_activity_at - offset
+
+
 async def seed(session: AsyncSession) -> SeedSummary | None:
     if await _already_seeded(session):
         return None
@@ -146,11 +215,14 @@ async def seed(session: AsyncSession) -> SeedSummary | None:
     session.add_all(conversations)
     await session.commit()
 
+    messages = await _seed_messages(session, people, conversations)
+
     return SeedSummary(
         users=len(people),
         contacts=len(contacts),
         conversations=len(conversations),
         memberships=memberships,
+        messages=messages,
     )
 
 
