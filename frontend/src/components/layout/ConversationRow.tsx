@@ -36,24 +36,22 @@ export function ConversationRow({ conversation, viewerId, active }: Conversation
 
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-[15px] font-medium text-body">
+          <span className="text-body truncate text-[15px] font-medium">
             {titleOf(conversation, viewerId)}
           </span>
           <span
-            className={`shrink-0 text-xs ${unread > 0 ? "font-medium text-accent" : "text-faint"}`}
+            className={`shrink-0 text-xs ${unread > 0 ? "text-accent font-medium" : "text-faint"}`}
           >
             {formatListTimestamp(conversation.last_activity_at)}
           </span>
         </div>
 
         <div className="mt-0.5 flex items-center justify-between gap-2">
-          <span
-            className={`truncate text-sm ${unread > 0 ? "text-body" : "text-muted"}`}
-          >
+          <span className={`truncate text-sm ${unread > 0 ? "text-body" : "text-muted"}`}>
             {previewOf(conversation, viewerId, lastMessage)}
           </span>
           {unread > 0 && (
-            <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-medium text-white">
+            <span className="bg-accent flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-medium text-white">
               {unread > 99 ? "99+" : unread}
             </span>
           )}

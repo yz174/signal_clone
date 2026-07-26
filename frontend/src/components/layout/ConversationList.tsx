@@ -14,7 +14,12 @@ import { useSession } from "@/lib/store/session";
 
 type Filter = "all" | "unread";
 
-export function ConversationList({ onCompose }: { onCompose: () => void }) {
+interface ConversationListProps {
+  onCompose: () => void;
+  hideOnMobile: boolean;
+}
+
+export function ConversationList({ onCompose, hideOnMobile }: ConversationListProps) {
   const params = useParams<{ id?: string }>();
   const viewer = useSession((state) => state.user);
   const { conversations, loadingConversations, loadConversations } = useChat();
@@ -64,16 +69,20 @@ export function ConversationList({ onCompose }: { onCompose: () => void }) {
   if (!viewer) return null;
 
   return (
-    <aside className="flex w-list shrink-0 flex-col border-r border-line bg-surface">
+    <aside
+      className={`border-line bg-surface md:w-list flex shrink-0 flex-col border-r max-md:w-full ${
+        hideOnMobile ? "max-md:hidden" : ""
+      }`}
+    >
       <header className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-body">Chats</h1>
+          <h1 className="text-body text-xl font-semibold">Chats</h1>
           <button
             type="button"
             onClick={onCompose}
             aria-label="New chat"
             title="New chat"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-hover hover:text-body"
+            className="text-muted hover:bg-hover hover:text-body flex h-9 w-9 items-center justify-center rounded-full transition"
           >
             <ComposeIcon size={19} />
           </button>
@@ -82,14 +91,14 @@ export function ConversationList({ onCompose }: { onCompose: () => void }) {
         <div className="relative mt-3">
           <SearchIcon
             size={17}
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-faint"
+            className="text-faint pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
           />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search"
             aria-label="Search chats"
-            className="h-9 w-full rounded-full bg-surface-sunken pr-3 pl-9 text-sm text-body outline-none placeholder:text-faint focus:ring-1 focus:ring-accent"
+            className="bg-surface-sunken text-body placeholder:text-faint focus:ring-accent h-9 w-full rounded-full pr-3 pl-9 text-sm outline-none focus:ring-1"
           />
         </div>
 
@@ -116,9 +125,9 @@ export function ConversationList({ onCompose }: { onCompose: () => void }) {
         {needle.length >= 2 && remote?.term === needle ? (
           <SearchResults results={remote.results} onNavigate={() => setQuery("")} />
         ) : loadingConversations && conversations.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-faint">Loading chats…</p>
+          <p className="text-faint px-4 py-6 text-sm">Loading chats…</p>
         ) : visible.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-faint">
+          <p className="text-faint px-4 py-6 text-sm">
             {query ? "No chats match that search." : "No chats yet."}
           </p>
         ) : (

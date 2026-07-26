@@ -18,7 +18,7 @@ export function SearchResults({ results, onNavigate }: SearchResultsProps) {
     results.messages.length === 0;
 
   if (empty) {
-    return <p className="px-4 py-6 text-sm text-faint">Nothing matches that search.</p>;
+    return <p className="text-faint px-4 py-6 text-sm">Nothing matches that search.</p>;
   }
 
   return (
@@ -30,10 +30,10 @@ export function SearchResults({ results, onNavigate }: SearchResultsProps) {
               key={hit.id}
               href={`/chats/${hit.id}`}
               onClick={onNavigate}
-              className="flex items-center gap-3 px-4 py-2.5 transition hover:bg-hover"
+              className="hover:bg-hover flex items-center gap-3 px-4 py-2.5 transition"
             >
               <Avatar name={hit.title} color="A200" group={hit.type === "group"} size={40} />
-              <span className="truncate text-sm text-body">{hit.title}</span>
+              <span className="text-body truncate text-sm">{hit.title}</span>
             </Link>
           ))}
         </Section>
@@ -50,8 +50,8 @@ export function SearchResults({ results, onNavigate }: SearchResultsProps) {
                 size={40}
               />
               <span className="min-w-0">
-                <span className="block truncate text-sm text-body">{contact.display_name}</span>
-                <span className="block truncate text-xs text-muted">
+                <span className="text-body block truncate text-sm">{contact.display_name}</span>
+                <span className="text-muted block truncate text-xs">
                   {contact.username ? `@${contact.username}` : contact.phone_e164}
                 </span>
               </span>
@@ -67,17 +67,17 @@ export function SearchResults({ results, onNavigate }: SearchResultsProps) {
               key={hit.message.id}
               href={`/chats/${hit.conversation_id}`}
               onClick={onNavigate}
-              className="block px-4 py-2.5 transition hover:bg-hover"
+              className="hover:bg-hover block px-4 py-2.5 transition"
             >
               <span className="flex items-baseline justify-between gap-2">
-                <span className="truncate text-sm font-medium text-body">
+                <span className="text-body truncate text-sm font-medium">
                   {hit.conversation_title}
                 </span>
-                <span className="shrink-0 text-xs text-faint">
+                <span className="text-faint shrink-0 text-xs">
                   {formatListTimestamp(hit.message.created_at)}
                 </span>
               </span>
-              <span className="mt-0.5 block truncate text-sm text-muted">{hit.message.body}</span>
+              <span className="text-muted mt-0.5 block truncate text-sm">{hit.message.body}</span>
             </Link>
           ))}
         </Section>
@@ -89,7 +89,7 @@ export function SearchResults({ results, onNavigate }: SearchResultsProps) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="pt-3">
-      <h2 className="px-4 pb-1 text-xs font-medium tracking-wide text-muted uppercase">{title}</h2>
+      <h2 className="text-muted px-4 pb-1 text-xs font-medium tracking-wide uppercase">{title}</h2>
       {children}
     </section>
   );

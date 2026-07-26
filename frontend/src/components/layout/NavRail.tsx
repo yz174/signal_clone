@@ -20,7 +20,7 @@ export function NavRail() {
   return (
     <nav
       aria-label="Primary"
-      className="flex w-rail shrink-0 flex-col items-center gap-1 border-r border-line bg-surface-raised py-4"
+      className="w-rail border-line bg-surface-raised flex shrink-0 flex-col items-center gap-1 border-r py-4 max-md:w-14"
     >
       {DESTINATIONS.map(({ href, label, Icon }) => {
         const active = pathname.startsWith(href);
