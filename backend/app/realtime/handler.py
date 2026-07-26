@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any
 
+import anyio
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -60,12 +61,11 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         pass
     finally:
         if registry.remove(user_id, websocket):
-            await _announce(sessions, bus, user_id, is_online=False)
+            with anyio.CancelScope(shield=True):
+                await _announce(sessions, bus, user_id, is_online=False)
 
 
-async def _announce(
-    sessions: SessionFactory, bus: EventBus, user_id: str, is_online: bool
-) -> None:
+async def _announce(sessions: SessionFactory, bus: EventBus, user_id: str, is_online: bool) -> None:
     async with sessions() as session:
         user = await session.get(User, user_id)
         if user is not None:
