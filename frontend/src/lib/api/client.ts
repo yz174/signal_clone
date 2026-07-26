@@ -166,8 +166,7 @@ export const api = {
       body: { user_id: userId, nickname: nickname ?? null },
     }),
 
-  removeContact: (userId: string) =>
-    request<void>(`/contacts/${userId}`, { method: "DELETE" }),
+  removeContact: (userId: string) => request<void>(`/contacts/${userId}`, { method: "DELETE" }),
 
   listConversations: (cursor?: string, limit = 30) =>
     request<ConversationPage>("/conversations", { query: { cursor, limit } }),
@@ -240,6 +239,12 @@ export const api = {
 
   deleteMessage: (messageId: string) =>
     request<Message>(`/messages/${messageId}`, { method: "DELETE" }),
+
+  setReaction: (messageId: string, emoji: string) =>
+    request<Message>(`/messages/${messageId}/reaction`, { method: "PUT", body: { emoji } }),
+
+  clearReaction: (messageId: string) =>
+    request<Message>(`/messages/${messageId}/reaction`, { method: "DELETE" }),
 
   search: (term: string) => request<SearchResults>("/search", { query: { q: term } }),
 

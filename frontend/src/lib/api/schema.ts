@@ -334,6 +334,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/messages/{message_id}/reaction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Reaction */
+        put: operations["set_reaction_api_v1_messages__message_id__reaction_put"];
+        post?: never;
+        /** Clear Reaction */
+        delete: operations["clear_reaction_api_v1_messages__message_id__reaction_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -548,6 +566,11 @@ export interface components {
             deleted_at: string | null;
             /** Expires At */
             expires_at: string | null;
+            /**
+             * Reactions
+             * @default []
+             */
+            reactions: components["schemas"]["ReactionOut"][];
         };
         /** MessagePageOut */
         MessagePageOut: {
@@ -555,6 +578,18 @@ export interface components {
             items: components["schemas"]["MessageOut"][];
             /** Has More */
             has_more: boolean;
+        };
+        /** ReactionIn */
+        ReactionIn: {
+            /** Emoji */
+            emoji: string;
+        };
+        /** ReactionOut */
+        ReactionOut: {
+            /** User Id */
+            user_id: string;
+            /** Emoji */
+            emoji: string;
         };
         /** ReadReceiptIn */
         ReadReceiptIn: {
@@ -1473,6 +1508,72 @@ export interface operations {
         };
     };
     delete_message_api_v1_messages__message_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_reaction_api_v1_messages__message_id__reaction_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_reaction_api_v1_messages__message_id__reaction_delete: {
         parameters: {
             query?: never;
             header?: never;
