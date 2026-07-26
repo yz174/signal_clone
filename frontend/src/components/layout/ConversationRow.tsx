@@ -30,6 +30,7 @@ export function ConversationRow({ conversation, viewerId, active }: Conversation
         name={titleOf(conversation, viewerId)}
         color={avatar.color}
         imageUrl={avatar.imageUrl}
+        group={avatar.group}
         size={48}
       />
 

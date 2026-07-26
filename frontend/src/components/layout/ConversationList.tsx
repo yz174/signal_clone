@@ -4,7 +4,10 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { ConversationRow } from "@/components/layout/ConversationRow";
+import { SearchResults } from "@/components/layout/SearchResults";
 import { ComposeIcon, SearchIcon } from "@/components/ui/Icons";
+import { api } from "@/lib/api/client";
+import type { SearchResults as Results } from "@/lib/api/types";
 import { previewOf, titleOf } from "@/lib/conversation";
 import { useChat } from "@/lib/store/chat";
 import { useSession } from "@/lib/store/session";
@@ -18,18 +21,35 @@ export function ConversationList({ onCompose }: { onCompose: () => void }) {
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [remote, setRemote] = useState<{ term: string; results: Results } | null>(null);
 
   useEffect(() => {
     void loadConversations();
   }, [loadConversations]);
 
+  useEffect(() => {
+    const needle = query.trim();
+    if (needle.length < 2) return;
+
+    const timer = setTimeout(() => {
+      void api
+        .search(needle)
+        .then((results) => setRemote({ term: needle, results }))
+        .catch(() => undefined);
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const needle = query.trim();
+
   const visible = useMemo(() => {
     if (!viewer) return [];
-    const needle = query.trim().toLowerCase();
+    const lowered = query.trim().toLowerCase();
 
     return conversations.filter((conversation) => {
       if (filter === "unread" && conversation.unread_count === 0) return false;
-      if (!needle) return true;
+      if (!lowered) return true;
 
       const haystack = [
         titleOf(conversation, viewer.id),
@@ -37,7 +57,7 @@ export function ConversationList({ onCompose }: { onCompose: () => void }) {
       ]
         .join(" ")
         .toLowerCase();
-      return haystack.includes(needle);
+      return haystack.includes(lowered);
     });
   }, [conversations, filter, query, viewer]);
 
@@ -93,7 +113,9 @@ export function ConversationList({ onCompose }: { onCompose: () => void }) {
       </header>
 
       <div className="scrollbar-slim flex-1 overflow-y-auto pb-3">
-        {loadingConversations && conversations.length === 0 ? (
+        {needle.length >= 2 && remote?.term === needle ? (
+          <SearchResults results={remote.results} onNavigate={() => setQuery("")} />
+        ) : loadingConversations && conversations.length === 0 ? (
           <p className="px-4 py-6 text-sm text-faint">Loading chats…</p>
         ) : visible.length === 0 ? (
           <p className="px-4 py-6 text-sm text-faint">
