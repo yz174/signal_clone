@@ -1,23 +1,15 @@
-"use client";
+import { SignalLogo } from "@/components/SignalLogo";
 
-import { Avatar } from "@/components/ui/Avatar";
-import { Button } from "@/components/ui/Button";
-import { useSession } from "@/lib/store/session";
-
-export default function ChatsPage() {
-  const { user, signOut } = useSession();
-  if (!user) return null;
-
+export default function NoConversationSelected() {
   return (
-    <main className="flex h-full flex-col items-center justify-center gap-6 bg-surface px-6">
-      <Avatar name={user.display_name} color={user.avatar_color} size={72} />
-      <div className="text-center">
-        <p className="text-lg font-semibold text-body">{user.display_name}</p>
-        <p className="text-sm text-muted">{user.phone_e164}</p>
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-surface-raised px-6 text-center">
+      <SignalLogo size={64} className="text-line-strong" />
+      <div>
+        <p className="text-base font-medium text-body">Select a chat</p>
+        <p className="mt-1 max-w-xs text-sm text-muted">
+          Pick a conversation from the list, or start a new one.
+        </p>
       </div>
-      <Button variant="secondary" onClick={() => void signOut()}>
-        Sign out
-      </Button>
-    </main>
+    </div>
   );
 }
