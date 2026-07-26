@@ -5,21 +5,33 @@ import { MoreIcon, PhoneIcon, SearchIcon, VideoIcon } from "@/components/ui/Icon
 import type { Conversation } from "@/lib/api/types";
 import { avatarOf, peersOf, titleOf } from "@/lib/conversation";
 import { formatLastSeen } from "@/lib/format";
+import { usePresence } from "@/lib/store/presence";
 
 interface ChatHeaderProps {
   conversation: Conversation;
   viewerId: string;
+  typing: boolean;
   onOpenDetails: () => void;
 }
 
-export function ChatHeader({ conversation, viewerId, onOpenDetails }: ChatHeaderProps) {
+export function ChatHeader({ conversation, viewerId, typing, onOpenDetails }: ChatHeaderProps) {
   const avatar = avatarOf(conversation, viewerId);
   const peers = peersOf(conversation, viewerId);
+  const online = usePresence((state) => state.online);
+  const lastSeen = usePresence((state) => state.lastSeen);
 
-  const subtitle =
-    conversation.type === "group"
+  const peer = peers[0]?.user;
+  const peerIsOnline = peer ? online[peer.id] : false;
+
+  const presenceLabel = peerIsOnline
+    ? "Online"
+    : formatLastSeen(peer ? (lastSeen[peer.id] ?? peer.last_seen_at) : null);
+
+  const subtitle = typing
+    ? "typing…"
+    : conversation.type === "group"
       ? `${conversation.members.length} members`
-      : formatLastSeen(peers[0]?.user.last_seen_at);
+      : presenceLabel;
 
   return (
     <header className="flex h-header shrink-0 items-center gap-3 border-b border-line bg-surface px-4">
@@ -38,7 +50,9 @@ export function ChatHeader({ conversation, viewerId, onOpenDetails }: ChatHeader
           <span className="block truncate text-[15px] font-medium text-body">
             {titleOf(conversation, viewerId)}
           </span>
-          <span className="block truncate text-xs text-muted">{subtitle}</span>
+          <span className={`block truncate text-xs ${typing ? "text-accent" : "text-muted"}`}>
+            {subtitle}
+          </span>
         </span>
       </button>
 

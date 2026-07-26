@@ -9,30 +9,25 @@ const LABELS: Record<MessageStatus, string> = {
   failed: "Failed to send",
 };
 
+function iconFor(status: MessageStatus) {
+  switch (status) {
+    case "sending":
+      return <ClockIcon size={13} className="opacity-70" />;
+    case "failed":
+      return <span className="text-[11px] font-semibold">!</span>;
+    case "sent":
+      return <CheckIcon size={14} className="opacity-70" />;
+    default:
+      return (
+        <DoubleCheckIcon size={16} className={status === "read" ? "" : "opacity-70"} />
+      );
+  }
+}
+
 export function ReceiptTicks({ status }: { status: MessageStatus }) {
-  const label = LABELS[status];
-
-  if (status === "sending") {
-    return <ClockIcon size={13} className="opacity-70" aria-label={label} />;
-  }
-
-  if (status === "failed") {
-    return (
-      <span className="text-[11px] font-medium" role="img" aria-label={label}>
-        !
-      </span>
-    );
-  }
-
-  if (status === "sent") {
-    return <CheckIcon size={14} className="opacity-70" aria-label={label} />;
-  }
-
   return (
-    <DoubleCheckIcon
-      size={16}
-      className={status === "read" ? "text-white" : "opacity-70"}
-      aria-label={label}
-    />
+    <span role="img" aria-label={LABELS[status]} className="inline-flex items-center">
+      {iconFor(status)}
+    </span>
   );
 }
