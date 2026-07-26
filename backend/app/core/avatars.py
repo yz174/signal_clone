@@ -1,8 +1,5 @@
 from hashlib import sha256
 
-# Signal's avatar token names. The backend stores the token, not a hex value: each token
-# resolves to a background/foreground pair that differs between light and dark themes,
-# which is presentation and belongs to the frontend.
 AVATAR_COLORS = (
     "A100",
     "A110",
