@@ -31,7 +31,7 @@ def new_refresh_token() -> str:
 
 
 def refresh_token_digest(token: str) -> str:
-   return sha256(token.encode()).hexdigest()
+    return sha256(token.encode()).hexdigest()
 
 
 def _encode(subject: str, token_type: TokenType, ttl_seconds: int) -> str:

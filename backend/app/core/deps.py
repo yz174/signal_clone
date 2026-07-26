@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +8,7 @@ from app.core.errors import UnauthorizedError
 from app.core.security import decode_token
 from app.db.session import get_session
 from app.models import User
+from app.realtime.bus import EventBus
 
 _bearer = HTTPBearer(auto_error=False)
 
@@ -31,3 +32,11 @@ async def current_user(
 
 
 CurrentUser = Annotated[User, Depends(current_user)]
+
+
+def get_bus(request: Request) -> EventBus:
+    bus: EventBus = request.app.state.bus
+    return bus
+
+
+BusDep = Annotated[EventBus, Depends(get_bus)]

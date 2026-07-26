@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,6 +19,10 @@ class Settings(BaseSettings):
 
     mock_otp_code: str = "123456"
     otp_ttl_seconds: int = 5 * 60
+
+    event_bus: Literal["inprocess", "redis"] = "inprocess"
+    redis_url: str = "redis://localhost:6379/0"
+    typing_ttl_seconds: int = 6
 
 
 settings = Settings()
