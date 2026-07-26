@@ -1,4 +1,4 @@
-import type { Conversation, Member, Message, MessageStatus } from "@/lib/api/types";
+import type { Conversation, LocalMessage, Member, Message, MessageStatus } from "@/lib/api/types";
 
 export function peersOf(conversation: Conversation, viewerId: string): Member[] {
   return conversation.members.filter((member) => member.user.id !== viewerId);
@@ -42,12 +42,13 @@ export function previewOf(
 }
 
 export function statusOf(
-  message: Message,
+  message: LocalMessage,
   conversation: Conversation,
   viewerId: string,
 ): MessageStatus | null {
+  if (message.failed) return "failed";
+  if (message.pending) return "sending";
   if (message.sender_id !== viewerId) return null;
-  if (message.id.startsWith("pending:")) return "sending";
 
   const peers = peersOf(conversation, viewerId);
   if (peers.length === 0) return "sent";

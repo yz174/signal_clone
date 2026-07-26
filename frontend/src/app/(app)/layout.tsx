@@ -5,10 +5,13 @@ import { useEffect } from "react";
 
 import { SignalLogo } from "@/components/SignalLogo";
 import { useSession } from "@/lib/store/session";
+import { useRealtime } from "@/lib/ws/useRealtime";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { status, restore } = useSession();
+
+  useRealtime();
 
   useEffect(() => {
     if (status === "loading") void restore();

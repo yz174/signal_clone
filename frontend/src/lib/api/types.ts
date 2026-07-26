@@ -18,3 +18,5 @@ export type RegistrationRequired = Schemas["RegistrationRequiredOut"];
 export type VerifyOtpResult = Authenticated | RegistrationRequired;
 
 export type MessageStatus = "sending" | "sent" | "delivered" | "read" | "failed";
+
+export type LocalMessage = Message & { pending?: boolean; failed?: boolean };
