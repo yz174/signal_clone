@@ -9,7 +9,7 @@ from app.core.security import decode_token
 from app.models import User
 from app.realtime.bus import EventBus
 from app.realtime.events import Event, EventType
-from app.services.membership import require_membership
+from app.services.membership import peer_ids, require_membership
 from app.services.message_service import MessageService
 from app.services.presence_service import PresenceService
 
@@ -96,7 +96,7 @@ async def _broadcast_typing(
         except AppError:
             return
 
-        peers = await MessageService(session).peer_ids(conversation_id, user_id)
+        peers = await peer_ids(session, conversation_id, user_id)
 
     if not peers:
         return

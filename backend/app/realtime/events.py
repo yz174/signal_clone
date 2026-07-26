@@ -10,6 +10,7 @@ from app.db.base import utcnow
 class EventType(StrEnum):
     MESSAGE_CREATED = "message.created"
     MESSAGE_DELETED = "message.deleted"
+    MESSAGE_REACTION = "message.reaction"
     RECEIPT_UPDATED = "receipt.updated"
     TYPING_UPDATED = "typing.updated"
     PRESENCE_UPDATED = "presence.updated"
