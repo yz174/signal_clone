@@ -76,12 +76,12 @@ export function NewGroupModal({ onClose }: { onClose: () => void }) {
         error={error}
       />
 
-      <p className="mt-5 mb-2 text-xs font-medium tracking-wide text-muted uppercase">
+      <p className="text-muted mt-5 mb-2 text-xs font-medium tracking-wide uppercase">
         Members ({selected.length} selected)
       </p>
 
       {candidates.length === 0 ? (
-        <p className="py-6 text-center text-sm text-faint">
+        <p className="text-faint py-6 text-center text-sm">
           Add some contacts first, then you can group them.
         </p>
       ) : (
@@ -94,7 +94,7 @@ export function NewGroupModal({ onClose }: { onClose: () => void }) {
                   type="button"
                   onClick={() => toggle(user)}
                   aria-pressed={chosen}
-                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-hover"
+                  className="hover:bg-hover flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition"
                 >
                   <Avatar
                     name={user.display_name}
@@ -103,10 +103,10 @@ export function NewGroupModal({ onClose }: { onClose: () => void }) {
                     size={40}
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-body">
+                    <span className="text-body block truncate text-sm font-medium">
                       {user.display_name}
                     </span>
-                    <span className="block truncate text-xs text-muted">
+                    <span className="text-muted block truncate text-xs">
                       {user.username ? `@${user.username}` : user.phone_e164}
                     </span>
                   </span>

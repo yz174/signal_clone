@@ -17,11 +17,7 @@ interface ConversationDetailsProps {
   onClose: () => void;
 }
 
-export function ConversationDetails({
-  conversation,
-  viewerId,
-  onClose,
-}: ConversationDetailsProps) {
+export function ConversationDetails({ conversation, viewerId, onClose }: ConversationDetailsProps) {
   const router = useRouter();
   const { renameGroup, addMembers, setMemberRole, removeMember } = useChat();
 
@@ -68,8 +64,8 @@ export function ConversationDetails({
           size={80}
         />
         <div>
-          <p className="text-lg font-semibold text-body">{titleOf(conversation, viewerId)}</p>
-          <p className="text-sm text-muted">
+          <p className="text-body text-lg font-semibold">{titleOf(conversation, viewerId)}</p>
+          <p className="text-muted text-sm">
             {isGroup ? `${conversation.members.length} members` : "Direct message"}
           </p>
         </div>
@@ -83,7 +79,7 @@ export function ConversationDetails({
             value={name}
             onChange={(event) => setName(event.target.value)}
             aria-label="Group name"
-            className="h-10 flex-1 rounded-lg border border-line-strong bg-surface px-3 text-sm text-body outline-none focus:border-accent"
+            className="border-line-strong bg-surface text-body focus:border-accent h-10 flex-1 rounded-lg border px-3 text-sm outline-none"
           />
           <Button
             variant="secondary"
@@ -95,7 +91,7 @@ export function ConversationDetails({
         </div>
       )}
 
-      <p className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">Members</p>
+      <p className="text-muted mb-2 text-xs font-medium tracking-wide uppercase">Members</p>
       <ul className="space-y-1">
         {conversation.members.map((member) => {
           const isSelf = member.user.id === viewerId;
@@ -108,11 +104,11 @@ export function ConversationDetails({
                 size={36}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm text-body">
+                <p className="text-body truncate text-sm">
                   {member.user.display_name}
                   {isSelf && <span className="text-faint"> (you)</span>}
                 </p>
-                <p className="text-xs text-faint capitalize">{member.role}</p>
+                <p className="text-faint text-xs capitalize">{member.role}</p>
               </div>
 
               {isGroup && viewerIsAdmin && !isSelf && (
@@ -129,7 +125,7 @@ export function ConversationDetails({
                         ),
                       )
                     }
-                    className="rounded-full px-2.5 py-1 text-xs font-medium text-accent transition hover:bg-hover"
+                    className="text-accent hover:bg-hover rounded-full px-2.5 py-1 text-xs font-medium transition"
                   >
                     {member.role === "admin" ? "Demote" : "Make admin"}
                   </button>
@@ -137,7 +133,7 @@ export function ConversationDetails({
                     type="button"
                     disabled={busy}
                     onClick={() => void run(() => removeMember(conversation.id, member.user.id))}
-                    className="rounded-full px-2.5 py-1 text-xs font-medium text-[#be0404] transition hover:bg-hover"
+                    className="hover:bg-hover rounded-full px-2.5 py-1 text-xs font-medium text-[#be0404] transition"
                   >
                     Remove
                   </button>
@@ -150,7 +146,7 @@ export function ConversationDetails({
 
       {isGroup && viewerIsAdmin && addable.length > 0 && (
         <>
-          <p className="mt-5 mb-2 text-xs font-medium tracking-wide text-muted uppercase">
+          <p className="text-muted mt-5 mb-2 text-xs font-medium tracking-wide uppercase">
             Add from contacts
           </p>
           <ul className="space-y-1">
@@ -162,14 +158,14 @@ export function ConversationDetails({
                   imageUrl={user.avatar_url}
                   size={32}
                 />
-                <span className="min-w-0 flex-1 truncate text-sm text-body">
+                <span className="text-body min-w-0 flex-1 truncate text-sm">
                   {user.display_name}
                 </span>
                 <button
                   type="button"
                   disabled={busy}
                   onClick={() => void run(() => addMembers(conversation.id, [user.id]))}
-                  className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-white disabled:opacity-50"
+                  className="bg-accent rounded-full px-3 py-1 text-xs font-medium text-white disabled:opacity-50"
                 >
                   Add
                 </button>
@@ -180,7 +176,7 @@ export function ConversationDetails({
       )}
 
       {isGroup && (
-        <div className="mt-6 border-t border-line pt-5">
+        <div className="border-line mt-6 border-t pt-5">
           <Button
             variant="danger"
             fullWidth
