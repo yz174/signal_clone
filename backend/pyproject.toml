@@ -33,6 +33,7 @@ dev = [
     "mypy>=1.14",
     "websockets>=14.1",
     "pytest-env>=1.7.0",
+    "asgi-lifespan>=2.1.0",
 ]
 
 [tool.ruff]
@@ -45,11 +46,11 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "ASYNC", "S", "C4", "SIM", "TC", "
 ignore = ["B008"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]
-"tests/conftest.py" = ["S101", "F401"]
+"tests/*" = ["S101", "SIM117"]
+"tests/conftest.py" = ["S101", "SIM117", "F401"]
 "alembic/env.py" = ["F401"]
 "app/db/base.py" = ["RUF012"]
-"scripts/*" = ["S603"]
+"scripts/*" = ["S603", "S607", "SIM115"]
 
 [tool.mypy]
 python_version = "3.12"
