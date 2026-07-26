@@ -4,13 +4,14 @@ from datetime import datetime, timedelta
 from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.errors import ForbiddenError, NotFoundError, ValidationError
 from app.db.base import utcnow
 from app.models import Conversation, ConversationMember, Message, MessageKind, User
 from app.realtime.bus import EventBus
 from app.realtime.events import Event, EventType
-from app.services.membership import require_membership
+from app.services.membership import peer_ids, require_membership
 
 MAX_PAGE_SIZE = 100
 
@@ -65,6 +66,7 @@ class MessageService:
                 else None
             ),
         )
+        message.reactions = []
         self._session.add(message)
         await self._session.flush()
 
@@ -84,7 +86,7 @@ class MessageService:
         await self._publish(
             EventType.MESSAGE_CREATED,
             {"conversation_id": conversation_id, "message": _message_payload(message)},
-            await self.peer_ids(conversation_id, user.id),
+            await peer_ids(self._session, conversation_id, user.id),
         )
         return message
 
@@ -99,7 +101,11 @@ class MessageService:
         await require_membership(self._session, conversation_id, user.id)
         limit = min(limit, MAX_PAGE_SIZE)
 
-        query = select(Message).where(Message.conversation_id == conversation_id)
+        query = (
+            select(Message)
+            .where(Message.conversation_id == conversation_id)
+            .options(selectinload(Message.reactions))
+        )
 
         if after_seq is not None:
             query = query.where(Message.seq > after_seq).order_by(Message.seq).limit(limit + 1)
@@ -117,9 +123,7 @@ class MessageService:
         return MessagePage(items=list(reversed(rows[:limit])), has_more=has_more)
 
     async def delete(self, user: User, message_id: str) -> Message:
-        message = await self._session.get(Message, message_id)
-        if message is None:
-            raise NotFoundError("Message not found")
+        message = await self._load(message_id)
 
         await require_membership(self._session, message.conversation_id, user.id)
 
@@ -133,7 +137,7 @@ class MessageService:
             await self._publish(
                 EventType.MESSAGE_DELETED,
                 {"conversation_id": message.conversation_id, "message_id": message.id},
-                await self.peer_ids(message.conversation_id, user.id),
+                await peer_ids(self._session, message.conversation_id, user.id),
             )
 
         return message
@@ -166,16 +170,6 @@ class MessageService:
 
         return member
 
-    async def peer_ids(self, conversation_id: str, exclude_user_id: str) -> tuple[str, ...]:
-        peers = await self._session.scalars(
-            select(ConversationMember.user_id).where(
-                ConversationMember.conversation_id == conversation_id,
-                ConversationMember.user_id != exclude_user_id,
-                ConversationMember.left_at.is_(None),
-            )
-        )
-        return tuple(peers)
-
     async def _publish_receipt(self, member: ConversationMember) -> None:
         await self._publish(
             EventType.RECEIPT_UPDATED,
@@ -185,7 +179,7 @@ class MessageService:
                 "last_read_seq": member.last_read_seq,
                 "last_delivered_seq": member.last_delivered_seq,
             },
-            await self.peer_ids(member.conversation_id, member.user_id),
+            await peer_ids(self._session, member.conversation_id, member.user_id),
         )
 
     async def _publish(
@@ -194,6 +188,14 @@ class MessageService:
         if self._bus is None or not recipients:
             return
         await self._bus.publish(Event(type=event_type, payload=payload, recipients=recipients))
+
+    async def _load(self, message_id: str) -> Message:
+        message = await self._session.scalar(
+            select(Message).where(Message.id == message_id).options(selectinload(Message.reactions))
+        )
+        if message is None:
+            raise NotFoundError("Message not found")
+        return message
 
     async def _next_seq(self, conversation_id: str, now: datetime) -> int:
         result = await self._session.execute(
