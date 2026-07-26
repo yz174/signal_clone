@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { AttachmentPreview } from "@/components/chat/AttachmentPreview";
 import { MessageActions } from "@/components/chat/MessageActions";
 import { ReceiptTicks } from "@/components/chat/ReceiptTicks";
 import { Avatar } from "@/components/ui/Avatar";
@@ -154,12 +155,19 @@ export function MessageBubble({
             </div>
           )}
 
+          {!message.deleted_at &&
+            message.attachments.map((attachment) => (
+              <AttachmentPreview key={attachment.id} attachment={attachment} />
+            ))}
+
           {message.deleted_at ? (
             <p className="text-[15px] italic opacity-70">This message was deleted</p>
           ) : (
-            <p className="text-[15px] leading-snug break-words whitespace-pre-wrap">
-              {message.body}
-            </p>
+            message.body && (
+              <p className="mt-1 text-[15px] leading-snug break-words whitespace-pre-wrap">
+                {message.body}
+              </p>
+            )
           )}
 
           <div

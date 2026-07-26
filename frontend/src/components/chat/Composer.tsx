@@ -2,11 +2,15 @@
 
 import { useRef, useState } from "react";
 
+import { AttachmentPreview } from "@/components/chat/AttachmentPreview";
+import { ApiError, api } from "@/lib/api/client";
+import { notify } from "@/lib/store/toast";
+
 import { PlusIcon, SendIcon } from "@/components/ui/Icons";
-import type { LocalMessage } from "@/lib/api/types";
+import type { Attachment, LocalMessage } from "@/lib/api/types";
 
 interface ComposerProps {
-  onSend: (body: string) => Promise<void>;
+  onSend: (body: string, attachments: Attachment[]) => Promise<void>;
   onTyping?: (isTyping: boolean) => void;
   disabled?: boolean;
   replyTo?: LocalMessage | null;
@@ -22,9 +26,30 @@ export function Composer({
 }: ComposerProps) {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const textarea = useRef<HTMLTextAreaElement>(null);
+  const filePicker = useRef<HTMLInputElement>(null);
 
-  const canSend = draft.trim().length > 0 && !sending && !disabled;
+  const canSend =
+    (draft.trim().length > 0 || attachments.length > 0) && !sending && !uploading && !disabled;
+
+  async function attachFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const uploaded = await api.uploadAttachment(file);
+        setAttachments((current) => [...current, uploaded]);
+      }
+    } catch (caught) {
+      notify(caught instanceof ApiError ? caught.message : "Upload failed", "error");
+    } finally {
+      setUploading(false);
+      if (filePicker.current) filePicker.current.value = "";
+    }
+  }
 
   function resize() {
     const element = textarea.current;
@@ -36,16 +61,19 @@ export function Composer({
   async function submit() {
     if (!canSend) return;
     const body = draft.trim();
+    const outgoing = attachments;
 
     setSending(true);
     setDraft("");
+    setAttachments([]);
     onTyping?.(false);
     requestAnimationFrame(resize);
 
     try {
-      await onSend(body);
+      await onSend(body, outgoing);
     } catch {
       setDraft(body);
+      setAttachments(outgoing);
     } finally {
       setSending(false);
       textarea.current?.focus();
@@ -72,13 +100,41 @@ export function Composer({
         </div>
       )}
 
+      {attachments.length > 0 && (
+        <div className="border-line flex flex-wrap gap-2 border-b px-4 py-2">
+          {attachments.map((attachment) => (
+            <div key={attachment.id} className="relative w-28">
+              <AttachmentPreview attachment={attachment} />
+              <button
+                type="button"
+                aria-label="Remove attachment"
+                onClick={() =>
+                  setAttachments((current) => current.filter((entry) => entry.id !== attachment.id))
+                }
+                className="bg-surface border-line absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border text-xs"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-end gap-2 px-4 py-3">
+        <input
+          ref={filePicker}
+          type="file"
+          multiple
+          accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,text/plain"
+          className="hidden"
+          onChange={(event) => void attachFiles(event.target.files)}
+        />
         <button
           type="button"
           aria-label="Add attachment"
-          title="Attachments are coming soon"
-          disabled
-          className="text-faint mb-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+          onClick={() => filePicker.current?.click()}
+          disabled={uploading || disabled}
+          className="text-muted hover:bg-hover hover:text-body mb-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition disabled:opacity-40"
         >
           <PlusIcon size={20} />
         </button>
