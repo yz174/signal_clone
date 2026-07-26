@@ -1,5 +1,6 @@
 import { clearTokens, getAccessToken, getRefreshToken, storeTokens } from "./tokens";
 import type {
+  Attachment,
   Authenticated,
   Contact,
   Conversation,
@@ -226,7 +227,12 @@ export const api = {
 
   sendMessage: (
     id: string,
-    payload: { clientMessageId: string; body: string; replyToId?: string },
+    payload: {
+      clientMessageId: string;
+      body: string;
+      replyToId?: string;
+      attachmentIds?: string[];
+    },
   ) =>
     request<Message>(`/conversations/${id}/messages`, {
       method: "POST",
@@ -234,8 +240,28 @@ export const api = {
         client_message_id: payload.clientMessageId,
         body: payload.body,
         reply_to_id: payload.replyToId ?? null,
+        attachment_ids: payload.attachmentIds ?? [],
       },
     }),
+
+  uploadAttachment: async (file: File, dimensions?: { width: number; height: number }) => {
+    const form = new FormData();
+    form.append("file", file);
+    if (dimensions) {
+      form.append("width", String(dimensions.width));
+      form.append("height", String(dimensions.height));
+    }
+
+    const token = getAccessToken();
+    const response = await fetch(`${API_BASE}/api/v1/attachments`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+
+    if (!response.ok) throw await toApiError(response);
+    return (await response.json()) as Attachment;
+  },
 
   deleteMessage: (messageId: string) =>
     request<Message>(`/messages/${messageId}`, { method: "DELETE" }),

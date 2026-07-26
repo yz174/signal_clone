@@ -369,6 +369,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Attachment */
+        post: operations["upload_attachment_api_v1_attachments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -377,6 +394,27 @@ export interface components {
         AddMembersIn: {
             /** User Ids */
             user_ids: string[];
+        };
+        /**
+         * AttachmentKind
+         * @enum {string}
+         */
+        AttachmentKind: "image" | "file";
+        /** AttachmentOut */
+        AttachmentOut: {
+            /** Id */
+            id: string;
+            kind: components["schemas"]["AttachmentKind"];
+            /** Url */
+            url: string;
+            /** Mime Type */
+            mime_type: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /** Width */
+            width: number | null;
+            /** Height */
+            height: number | null;
         };
         /** AuthenticatedOut */
         AuthenticatedOut: {
@@ -387,6 +425,15 @@ export interface components {
             status: "authenticated";
             tokens: components["schemas"]["TokenPair"];
             user: components["schemas"]["UserOut"];
+        };
+        /** Body_upload_attachment_api_v1_attachments_post */
+        Body_upload_attachment_api_v1_attachments_post: {
+            /** File */
+            file: string;
+            /** Width */
+            width?: number | null;
+            /** Height */
+            height?: number | null;
         };
         /** ContactCreate */
         ContactCreate: {
@@ -520,10 +567,18 @@ export interface components {
         MessageCreate: {
             /** Client Message Id */
             client_message_id: string;
-            /** Body */
+            /**
+             * Body
+             * @default
+             */
             body: string;
             /** Reply To Id */
             reply_to_id?: string | null;
+            /**
+             * Attachment Ids
+             * @default []
+             */
+            attachment_ids: string[];
         };
         /** MessageHitOut */
         MessageHitOut: {
@@ -571,6 +626,11 @@ export interface components {
              * @default []
              */
             reactions: components["schemas"]["ReactionOut"][];
+            /**
+             * Attachments
+             * @default []
+             */
+            attachments: components["schemas"]["AttachmentOut"][];
         };
         /** MessagePageOut */
         MessagePageOut: {
@@ -1622,6 +1682,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchResultsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_attachment_api_v1_attachments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_attachment_api_v1_attachments_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttachmentOut"];
                 };
             };
             /** @description Validation Error */
