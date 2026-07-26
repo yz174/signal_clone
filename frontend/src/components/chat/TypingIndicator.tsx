@@ -10,16 +10,16 @@ export function TypingIndicator({ names }: { names: string[] }) {
 
   return (
     <div className="flex items-center gap-2 px-4 pb-2" aria-live="polite">
-      <span className="flex items-center gap-1 rounded-bubble bg-incoming px-3 py-2">
+      <span className="rounded-bubble bg-incoming flex items-center gap-1 px-3 py-2">
         {[0, 1, 2].map((dot) => (
           <span
             key={dot}
-            className="h-1.5 w-1.5 animate-bounce rounded-full bg-faint"
+            className="bg-faint h-1.5 w-1.5 animate-bounce rounded-full"
             style={{ animationDelay: `${dot * 120}ms` }}
           />
         ))}
       </span>
-      <span className="text-xs text-muted">{label}</span>
+      <span className="text-muted text-xs">{label}</span>
     </div>
   );
 }

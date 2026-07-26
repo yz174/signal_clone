@@ -18,9 +18,7 @@ function iconFor(status: MessageStatus) {
     case "sent":
       return <CheckIcon size={14} className="opacity-70" />;
     default:
-      return (
-        <DoubleCheckIcon size={16} className={status === "read" ? "" : "opacity-70"} />
-      );
+      return <DoubleCheckIcon size={16} className={status === "read" ? "" : "opacity-70"} />;
   }
 }
 

@@ -3,14 +3,23 @@
 import { useRef, useState } from "react";
 
 import { PlusIcon, SendIcon } from "@/components/ui/Icons";
+import type { LocalMessage } from "@/lib/api/types";
 
 interface ComposerProps {
   onSend: (body: string) => Promise<void>;
   onTyping?: (isTyping: boolean) => void;
   disabled?: boolean;
+  replyTo?: LocalMessage | null;
+  onCancelReply?: () => void;
 }
 
-export function Composer({ onSend, onTyping, disabled = false }: ComposerProps) {
+export function Composer({
+  onSend,
+  onTyping,
+  disabled = false,
+  replyTo = null,
+  onCancelReply,
+}: ComposerProps) {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const textarea = useRef<HTMLTextAreaElement>(null);
@@ -44,48 +53,68 @@ export function Composer({ onSend, onTyping, disabled = false }: ComposerProps) 
   }
 
   return (
-    <div className="flex items-end gap-2 border-t border-line bg-surface px-4 py-3">
-      <button
-        type="button"
-        aria-label="Add attachment"
-        title="Attachments are coming soon"
-        disabled
-        className="mb-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-faint"
-      >
-        <PlusIcon size={20} />
-      </button>
+    <div className="border-line bg-surface border-t">
+      {replyTo && (
+        <div className="border-line flex items-start gap-2 border-b px-4 py-2">
+          <span aria-hidden className="bg-accent mt-0.5 h-8 w-0.5 shrink-0 rounded" />
+          <span className="min-w-0 flex-1">
+            <span className="text-accent block text-xs font-medium">Replying to</span>
+            <span className="text-muted line-clamp-1 block text-sm">{replyTo.body}</span>
+          </span>
+          <button
+            type="button"
+            onClick={onCancelReply}
+            aria-label="Cancel reply"
+            className="text-muted hover:bg-hover hover:text-body flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
-      <textarea
-        ref={textarea}
-        rows={1}
-        value={draft}
-        disabled={disabled}
-        placeholder="Message"
-        aria-label="Message"
-        onChange={(event) => {
-          setDraft(event.target.value);
-          onTyping?.(event.target.value.length > 0);
-          resize();
-        }}
-        onBlur={() => onTyping?.(false)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            void submit();
-          }
-        }}
-        className="scrollbar-slim max-h-40 flex-1 resize-none rounded-2xl bg-surface-sunken px-4 py-2.5 text-[15px] leading-snug text-body outline-none placeholder:text-faint focus:ring-1 focus:ring-accent"
-      />
+      <div className="flex items-end gap-2 px-4 py-3">
+        <button
+          type="button"
+          aria-label="Add attachment"
+          title="Attachments are coming soon"
+          disabled
+          className="text-faint mb-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+        >
+          <PlusIcon size={20} />
+        </button>
 
-      <button
-        type="button"
-        onClick={() => void submit()}
-        disabled={!canSend}
-        aria-label="Send"
-        className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-white transition disabled:opacity-40"
-      >
-        <SendIcon size={18} />
-      </button>
+        <textarea
+          ref={textarea}
+          rows={1}
+          value={draft}
+          disabled={disabled}
+          placeholder="Message"
+          aria-label="Message"
+          onChange={(event) => {
+            setDraft(event.target.value);
+            onTyping?.(event.target.value.length > 0);
+            resize();
+          }}
+          onBlur={() => onTyping?.(false)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              void submit();
+            }
+          }}
+          className="scrollbar-slim bg-surface-sunken text-body placeholder:text-faint focus:ring-accent max-h-40 flex-1 resize-none rounded-2xl px-4 py-2.5 text-[15px] leading-snug outline-none focus:ring-1"
+        />
+
+        <button
+          type="button"
+          onClick={() => void submit()}
+          disabled={!canSend}
+          aria-label="Send"
+          className="bg-accent mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-40"
+        >
+          <SendIcon size={18} />
+        </button>
+      </div>
     </div>
   );
 }

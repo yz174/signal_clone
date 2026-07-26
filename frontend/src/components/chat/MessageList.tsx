@@ -3,12 +3,12 @@
 import { useEffect, useRef } from "react";
 
 import { MessageBubble } from "@/components/chat/MessageBubble";
-import type { Conversation, Message } from "@/lib/api/types";
+import type { Conversation, LocalMessage } from "@/lib/api/types";
 import { formatDayDivider, isSameDay } from "@/lib/format";
 
 const GROUPING_WINDOW_MS = 5 * 60_000;
 
-function grouped(current: Message, neighbour: Message | undefined): boolean {
+function grouped(current: LocalMessage, neighbour: LocalMessage | undefined): boolean {
   if (!neighbour) return false;
   if (neighbour.sender_id !== current.sender_id) return false;
   if (!isSameDay(neighbour.created_at, current.created_at)) return false;
@@ -19,12 +19,16 @@ function grouped(current: Message, neighbour: Message | undefined): boolean {
 }
 
 interface MessageListProps {
-  messages: Message[];
+  messages: LocalMessage[];
   conversation: Conversation;
   viewerId: string;
   hasMore: boolean;
   loading: boolean;
   onLoadOlder: () => void;
+  onReact: (messageId: string, emoji: string) => void;
+  onReply: (message: LocalMessage) => void;
+  onDelete: (messageId: string) => void;
+  onRetry: (clientMessageId: string) => void;
 }
 
 export function MessageList({
@@ -34,7 +38,12 @@ export function MessageList({
   hasMore,
   loading,
   onLoadOlder,
+  onReact,
+  onReply,
+  onDelete,
+  onRetry,
 }: MessageListProps) {
+  const byId = new Map(messages.map((message) => [message.id, message]));
   const bottomRef = useRef<HTMLDivElement>(null);
   const newestSeq = messages.at(-1)?.seq ?? 0;
 
@@ -49,7 +58,7 @@ export function MessageList({
           <button
             type="button"
             onClick={onLoadOlder}
-            className="rounded-full bg-surface-sunken px-4 py-1.5 text-xs font-medium text-muted transition hover:text-body"
+            className="bg-surface-sunken text-muted hover:text-body rounded-full px-4 py-1.5 text-xs font-medium transition"
           >
             Load earlier messages
           </button>
@@ -57,7 +66,7 @@ export function MessageList({
       )}
 
       {messages.length === 0 && !loading && (
-        <p className="py-10 text-center text-sm text-faint">No messages yet. Say hello.</p>
+        <p className="text-faint py-10 text-center text-sm">No messages yet. Say hello.</p>
       )}
 
       {messages.map((message, index) => {
@@ -66,20 +75,25 @@ export function MessageList({
         const startsNewDay = !previous || !isSameDay(previous.created_at, message.created_at);
 
         return (
-          <div key={message.id}>
+          <div key={message.id} className="group relative py-1 hover:z-30">
             {startsNewDay && (
               <div className="my-4 flex justify-center">
-                <span className="rounded-full bg-surface-sunken px-3 py-1 text-[11px] font-medium tracking-wide text-muted uppercase">
+                <span className="bg-surface-sunken text-muted rounded-full px-3 py-1 text-[11px] font-medium tracking-wide uppercase">
                   {formatDayDivider(message.created_at)}
                 </span>
               </div>
             )}
             <MessageBubble
               message={message}
+              quoted={message.reply_to_id ? byId.get(message.reply_to_id) : undefined}
               conversation={conversation}
               viewerId={viewerId}
               groupedWithPrevious={!startsNewDay && grouped(message, previous)}
               groupedWithNext={grouped(message, next)}
+              onReact={(emoji) => onReact(message.id, emoji)}
+              onReply={() => onReply(message)}
+              onDelete={() => onDelete(message.id)}
+              onRetry={() => onRetry(message.client_message_id)}
             />
           </div>
         );

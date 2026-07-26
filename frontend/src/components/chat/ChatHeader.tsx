@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { Avatar } from "@/components/ui/Avatar";
 import { MoreIcon, PhoneIcon, SearchIcon, VideoIcon } from "@/components/ui/Icons";
 import type { Conversation } from "@/lib/api/types";
@@ -34,7 +36,15 @@ export function ChatHeader({ conversation, viewerId, typing, onOpenDetails }: Ch
       : presenceLabel;
 
   return (
-    <header className="flex h-header shrink-0 items-center gap-3 border-b border-line bg-surface px-4">
+    <header className="h-header border-line bg-surface flex shrink-0 items-center gap-3 border-b px-4">
+      <Link
+        href="/chats"
+        aria-label="Back to chats"
+        className="text-muted hover:bg-hover hover:text-body -ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition md:hidden"
+      >
+        ‹
+      </Link>
+
       <button
         type="button"
         onClick={onOpenDetails}
@@ -48,7 +58,7 @@ export function ChatHeader({ conversation, viewerId, typing, onOpenDetails }: Ch
           size={36}
         />
         <span className="min-w-0">
-          <span className="block truncate text-[15px] font-medium text-body">
+          <span className="text-body block truncate text-[15px] font-medium">
             {titleOf(conversation, viewerId)}
           </span>
           <span className={`block truncate text-xs ${typing ? "text-accent" : "text-muted"}`}>
@@ -57,7 +67,7 @@ export function ChatHeader({ conversation, viewerId, typing, onOpenDetails }: Ch
         </span>
       </button>
 
-      <div className="flex items-center gap-1 text-muted">
+      <div className="text-muted flex items-center gap-1">
         {[
           { Icon: VideoIcon, label: "Video call" },
           { Icon: PhoneIcon, label: "Voice call" },
@@ -78,7 +88,7 @@ export function ChatHeader({ conversation, viewerId, typing, onOpenDetails }: Ch
           type="button"
           onClick={onOpenDetails}
           aria-label="Conversation details"
-          className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-hover hover:text-body"
+          className="hover:bg-hover hover:text-body flex h-9 w-9 items-center justify-center rounded-full transition"
         >
           <MoreIcon size={19} />
         </button>
