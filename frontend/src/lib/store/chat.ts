@@ -21,11 +21,14 @@ interface ChatState {
   threads: Record<string, Thread>;
   loadingConversations: boolean;
   error: string | null;
+  viewerId: string | null;
+  setViewerId: (viewerId: string) => void;
 
   loadConversations: () => Promise<void>;
   openConversation: (conversationId: string) => Promise<void>;
   loadOlder: (conversationId: string) => Promise<void>;
-  sendMessage: (conversationId: string, body: string) => Promise<void>;
+  sendMessage: (conversationId: string, body: string, replyToId?: string) => Promise<void>;
+  deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
   retryMessage: (conversationId: string, clientMessageId: string) => Promise<void>;
   markRead: (conversationId: string) => Promise<void>;
 
@@ -39,6 +42,13 @@ interface ChatState {
 
   applyIncomingMessage: (conversationId: string, message: Message) => void;
   applyDeletedMessage: (conversationId: string, messageId: string) => void;
+  toggleReaction: (conversationId: string, messageId: string, emoji: string) => Promise<void>;
+  applyReaction: (
+    conversationId: string,
+    messageId: string,
+    userId: string,
+    emoji: string | null,
+  ) => void;
   applyReceipt: (
     conversationId: string,
     userId: string,
@@ -70,6 +80,8 @@ export const useChat = create<ChatState>((set, get) => ({
   threads: {},
   loadingConversations: false,
   error: null,
+  viewerId: null,
+  setViewerId: (viewerId) => set({ viewerId }),
 
   threadFor: (conversationId) => get().threads[conversationId] ?? EMPTY_THREAD,
 
@@ -126,7 +138,7 @@ export const useChat = create<ChatState>((set, get) => ({
     }));
   },
 
-  sendMessage: async (conversationId, body) => {
+  sendMessage: async (conversationId, body, replyToId) => {
     const clientMessageId = crypto.randomUUID();
 
     const optimistic: LocalMessage = {
@@ -136,12 +148,13 @@ export const useChat = create<ChatState>((set, get) => ({
       sender_id: null,
       kind: "text",
       body,
-      reply_to_id: null,
+      reply_to_id: replyToId ?? null,
       client_message_id: clientMessageId,
       created_at: new Date().toISOString(),
       edited_at: null,
       deleted_at: null,
       expires_at: null,
+      reactions: [],
       pending: true,
     };
 
@@ -182,6 +195,7 @@ export const useChat = create<ChatState>((set, get) => ({
       const saved = await api.sendMessage(conversationId, {
         clientMessageId,
         body: pending.body,
+        replyToId: pending.reply_to_id ?? undefined,
       });
       get().applyIncomingMessage(conversationId, saved);
     } catch {
@@ -260,8 +274,7 @@ export const useChat = create<ChatState>((set, get) => ({
 
       const at = thread.messages.findIndex(
         (existing) =>
-          existing.id === message.id ||
-          existing.client_message_id === message.client_message_id,
+          existing.id === message.id || existing.client_message_id === message.client_message_id,
       );
 
       const messages =
@@ -287,6 +300,46 @@ export const useChat = create<ChatState>((set, get) => ({
         conversations: sortByActivity(conversations),
       };
     });
+  },
+
+  toggleReaction: async (conversationId, messageId, emoji) => {
+    const thread = get().threadFor(conversationId);
+    const message = thread.messages.find((entry) => entry.id === messageId);
+    const mine = message?.reactions?.find((entry) => entry.user_id === get().viewerId);
+
+    const updated =
+      mine?.emoji === emoji
+        ? await api.clearReaction(messageId)
+        : await api.setReaction(messageId, emoji);
+
+    get().applyIncomingMessage(conversationId, updated);
+  },
+
+  applyReaction: (conversationId, messageId, userId, emoji) =>
+    set((state) => {
+      const thread = state.threads[conversationId];
+      if (!thread) return {};
+      return {
+        threads: {
+          ...state.threads,
+          [conversationId]: {
+            ...thread,
+            messages: thread.messages.map((message) => {
+              if (message.id !== messageId) return message;
+              const others = (message.reactions ?? []).filter((entry) => entry.user_id !== userId);
+              return {
+                ...message,
+                reactions: emoji ? [...others, { user_id: userId, emoji }] : others,
+              };
+            }),
+          },
+        },
+      };
+    }),
+
+  deleteMessage: async (conversationId, messageId) => {
+    const deleted = await api.deleteMessage(messageId);
+    get().applyIncomingMessage(conversationId, deleted);
   },
 
   applyDeletedMessage: (conversationId, messageId) =>
