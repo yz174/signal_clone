@@ -8,6 +8,7 @@ import type {
   Message,
   MessagePage,
   Receipt,
+  SearchResults,
   User,
   VerifyOtpResult,
 } from "./types";
@@ -239,6 +240,8 @@ export const api = {
 
   deleteMessage: (messageId: string) =>
     request<Message>(`/messages/${messageId}`, { method: "DELETE" }),
+
+  search: (term: string) => request<SearchResults>("/search", { query: { q: term } }),
 
   markRead: (id: string, seq: number) =>
     request<Receipt>(`/conversations/${id}/read`, { method: "POST", body: { seq } }),
