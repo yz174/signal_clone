@@ -116,8 +116,8 @@ export default function ConversationPage() {
       <Composer
         replyTo={replyTo}
         onCancelReply={() => setReply(null)}
-        onSend={async (body) => {
-          await sendMessage(id, body, replyTo?.id);
+        onSend={async (body, attachments) => {
+          await sendMessage(id, body, replyTo?.id, attachments);
           setReply(null);
         }}
         onTyping={announceTyping}

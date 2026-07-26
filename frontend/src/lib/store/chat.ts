@@ -3,7 +3,8 @@
 import { create } from "zustand";
 
 import { api } from "@/lib/api/client";
-import type { Conversation, LocalMessage, MemberRole, Message } from "@/lib/api/types";
+import type { Attachment, Conversation, LocalMessage, MemberRole, Message } from "@/lib/api/types";
+import { dequeue, enqueue, queued } from "@/lib/offline/outbox";
 import { notify } from "@/lib/store/toast";
 
 interface Thread {
@@ -27,7 +28,12 @@ interface ChatState {
   loadConversations: () => Promise<void>;
   openConversation: (conversationId: string) => Promise<void>;
   loadOlder: (conversationId: string) => Promise<void>;
-  sendMessage: (conversationId: string, body: string, replyToId?: string) => Promise<void>;
+  sendMessage: (
+    conversationId: string,
+    body: string,
+    replyToId?: string,
+    attachments?: Attachment[],
+  ) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
   retryMessage: (conversationId: string, clientMessageId: string) => Promise<void>;
   markRead: (conversationId: string) => Promise<void>;
@@ -56,6 +62,7 @@ interface ChatState {
     lastDeliveredSeq: number,
   ) => void;
   recoverMissedMessages: () => Promise<void>;
+  flushOutbox: () => Promise<void>;
   upsertConversation: (conversation: Conversation) => void;
 
   threadFor: (conversationId: string) => Thread;
@@ -138,7 +145,7 @@ export const useChat = create<ChatState>((set, get) => ({
     }));
   },
 
-  sendMessage: async (conversationId, body, replyToId) => {
+  sendMessage: async (conversationId, body, replyToId, pendingAttachments) => {
     const clientMessageId = crypto.randomUUID();
 
     const optimistic: LocalMessage = {
@@ -155,6 +162,7 @@ export const useChat = create<ChatState>((set, get) => ({
       deleted_at: null,
       expires_at: null,
       reactions: [],
+      attachments: pendingAttachments ?? [],
       pending: true,
     };
 
@@ -168,6 +176,15 @@ export const useChat = create<ChatState>((set, get) => ({
       };
     });
 
+    await enqueue({
+      clientMessageId,
+      conversationId,
+      body,
+      replyToId,
+      attachmentIds: (pendingAttachments ?? []).map((attachment) => attachment.id),
+      queuedAt: new Date().toISOString(),
+    });
+
     await get().retryMessage(conversationId, clientMessageId);
   },
 
@@ -175,7 +192,7 @@ export const useChat = create<ChatState>((set, get) => ({
     const pending = get()
       .threadFor(conversationId)
       .messages.find((message) => message.client_message_id === clientMessageId);
-    if (!pending?.body) return;
+    if (!pending) return;
 
     set((state) => ({
       threads: {
@@ -194,10 +211,12 @@ export const useChat = create<ChatState>((set, get) => ({
     try {
       const saved = await api.sendMessage(conversationId, {
         clientMessageId,
-        body: pending.body,
+        body: pending.body ?? "",
         replyToId: pending.reply_to_id ?? undefined,
+        attachmentIds: pending.attachments.map((attachment) => attachment.id),
       });
       get().applyIncomingMessage(conversationId, saved);
+      await dequeue(clientMessageId);
     } catch {
       set((state) => ({
         threads: {
@@ -392,6 +411,35 @@ export const useChat = create<ChatState>((set, get) => ({
         conversation.id === conversationId ? { ...conversation, unread_count: 0 } : conversation,
       ),
     }));
+  },
+
+  flushOutbox: async () => {
+    const pending = await queued().catch(() => []);
+
+    for (const message of pending) {
+      const thread = get().threadFor(message.conversationId);
+      const stillPending = thread.messages.some(
+        (entry) => entry.client_message_id === message.clientMessageId,
+      );
+
+      if (stillPending) {
+        await get().retryMessage(message.conversationId, message.clientMessageId);
+        continue;
+      }
+
+      try {
+        const saved = await api.sendMessage(message.conversationId, {
+          clientMessageId: message.clientMessageId,
+          body: message.body,
+          replyToId: message.replyToId,
+          attachmentIds: message.attachmentIds,
+        });
+        get().applyIncomingMessage(message.conversationId, saved);
+        await dequeue(message.clientMessageId);
+      } catch {
+        break;
+      }
+    }
   },
 
   recoverMissedMessages: async () => {

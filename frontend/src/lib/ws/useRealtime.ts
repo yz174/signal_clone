@@ -87,6 +87,7 @@ export function useRealtime(): void {
       if (everConnected) notify("Reconnected");
       everConnected = true;
       void useChat.getState().recoverMissedMessages();
+      void useChat.getState().flushOutbox();
     });
 
     realtime.connect(token);
