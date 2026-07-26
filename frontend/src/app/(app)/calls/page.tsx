@@ -4,7 +4,7 @@ import { PhoneIcon } from "@/components/ui/Icons";
 
 export default function CallsPage() {
   return (
-    <div className="flex h-full bg-surface">
+    <div className="bg-surface flex h-full">
       <NavRail />
       <ComingSoon
         title="Calls"

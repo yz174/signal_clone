@@ -24,8 +24,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (status !== "authenticated") {
     return (
-      <div className="flex h-full items-center justify-center bg-surface">
-        <SignalLogo size={44} className="animate-pulse text-line-strong" />
+      <div className="bg-surface flex h-full items-center justify-center">
+        <SignalLogo size={44} className="text-line-strong animate-pulse" />
       </div>
     );
   }

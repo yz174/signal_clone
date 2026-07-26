@@ -19,15 +19,15 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="flex h-full bg-surface">
+    <div className="bg-surface flex h-full">
       <NavRail />
 
-      <div className="scrollbar-slim flex-1 overflow-y-auto bg-surface-raised">
+      <div className="scrollbar-slim bg-surface-raised flex-1 overflow-y-auto">
         <div className="mx-auto max-w-xl px-6 py-10">
-          <h1 className="text-xl font-semibold text-body">Settings</h1>
+          <h1 className="text-body text-xl font-semibold">Settings</h1>
 
           {user && (
-            <section className="mt-6 flex items-center gap-4 rounded-xl border border-line bg-surface p-5">
+            <section className="border-line bg-surface mt-6 flex items-center gap-4 rounded-xl border p-5">
               <Avatar
                 name={user.display_name}
                 color={user.avatar_color}
@@ -35,15 +35,15 @@ export default function SettingsPage() {
                 size={64}
               />
               <div className="min-w-0">
-                <p className="truncate text-base font-medium text-body">{user.display_name}</p>
-                <p className="text-sm text-muted">{user.phone_e164}</p>
-                {user.username && <p className="text-sm text-faint">@{user.username}</p>}
+                <p className="text-body truncate text-base font-medium">{user.display_name}</p>
+                <p className="text-muted text-sm">{user.phone_e164}</p>
+                {user.username && <p className="text-faint text-sm">@{user.username}</p>}
               </div>
             </section>
           )}
 
-          <section className="mt-6 rounded-xl border border-line bg-surface p-5">
-            <h2 className="text-sm font-medium text-body">Appearance</h2>
+          <section className="border-line bg-surface mt-6 rounded-xl border p-5">
+            <h2 className="text-body text-sm font-medium">Appearance</h2>
             <div className="mt-3 flex gap-2">
               {THEMES.map((option) => (
                 <button
@@ -63,14 +63,14 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          <section className="mt-6 divide-y divide-line rounded-xl border border-line bg-surface">
+          <section className="divide-line border-line bg-surface mt-6 divide-y rounded-xl border">
             {PLACEHOLDERS.map((entry) => (
               <div key={entry.title} className="flex items-center justify-between gap-4 p-5">
                 <div>
-                  <p className="text-sm font-medium text-body">{entry.title}</p>
-                  <p className="mt-0.5 text-sm text-muted">{entry.detail}</p>
+                  <p className="text-body text-sm font-medium">{entry.title}</p>
+                  <p className="text-muted mt-0.5 text-sm">{entry.detail}</p>
                 </div>
-                <span className="shrink-0 rounded-full bg-surface-sunken px-3 py-1 text-xs font-medium tracking-wide text-muted uppercase">
+                <span className="bg-surface-sunken text-muted shrink-0 rounded-full px-3 py-1 text-xs font-medium tracking-wide uppercase">
                   Soon
                 </span>
               </div>
@@ -83,7 +83,7 @@ export default function SettingsPage() {
             </Button>
           </div>
 
-          <p className="mt-8 text-xs text-faint">
+          <p className="text-faint mt-8 text-xs">
             Encryption is simulated in this build. Messages are stored unencrypted.
           </p>
         </div>

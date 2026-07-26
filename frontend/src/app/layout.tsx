@@ -28,9 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body className="h-full">
-        {children}
-      </body>
+      <body className="h-full">{children}</body>
     </html>
   );
 }

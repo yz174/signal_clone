@@ -6,13 +6,13 @@ interface ComingSoonProps {
 
 export function ComingSoon({ title, description, icon }: ComingSoonProps) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-surface-raised px-6 text-center">
+    <div className="bg-surface-raised flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
       <div className="text-line-strong">{icon}</div>
       <div>
-        <p className="text-base font-medium text-body">{title}</p>
-        <p className="mt-1 max-w-xs text-sm text-muted">{description}</p>
+        <p className="text-body text-base font-medium">{title}</p>
+        <p className="text-muted mt-1 max-w-xs text-sm">{description}</p>
       </div>
-      <span className="rounded-full bg-surface-sunken px-3 py-1 text-xs font-medium tracking-wide text-muted uppercase">
+      <span className="bg-surface-sunken text-muted rounded-full px-3 py-1 text-xs font-medium tracking-wide uppercase">
         Coming soon
       </span>
     </div>

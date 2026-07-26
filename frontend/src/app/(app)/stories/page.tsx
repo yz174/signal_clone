@@ -4,7 +4,7 @@ import { StoryIcon } from "@/components/ui/Icons";
 
 export default function StoriesPage() {
   return (
-    <div className="flex h-full bg-surface">
+    <div className="bg-surface flex h-full">
       <NavRail />
       <ComingSoon
         title="Stories"

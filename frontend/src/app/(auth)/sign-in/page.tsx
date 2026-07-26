@@ -74,12 +74,12 @@ export default function SignInPage() {
     });
 
   return (
-    <main className="flex min-h-full items-center justify-center bg-surface px-6 py-12">
+    <main className="bg-surface flex min-h-full items-center justify-center px-6 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-10 flex flex-col items-center text-center">
           <SignalLogo size={56} className="text-accent" />
-          <h1 className="mt-5 text-2xl font-semibold text-body">Signal</h1>
-          <p className="mt-2 text-sm text-muted">
+          <h1 className="text-body mt-5 text-2xl font-semibold">Signal</h1>
+          <p className="text-muted mt-2 text-sm">
             {step === "phone" && "Enter your phone number to get started."}
             {step === "code" && `We sent a code to ${phone}.`}
             {step === "profile" && "Choose how you appear to others."}
@@ -163,7 +163,7 @@ export default function SignInPage() {
           )}
         </div>
 
-        <p className="mt-10 text-center text-xs text-faint">
+        <p className="text-faint mt-10 text-center text-xs">
           Encryption is simulated. This is a portfolio clone, not the real Signal.
         </p>
       </div>
