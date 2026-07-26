@@ -52,7 +52,7 @@ ignore = ["B008"]
 "tests/conftest.py" = ["S101", "SIM117", "F401"]
 "alembic/env.py" = ["F401"]
 "app/db/base.py" = ["RUF012"]
-"scripts/*" = ["S603", "S607", "SIM115"]
+"scripts/*" = ["S603", "S607", "S105", "S310", "SIM115"]
 
 [tool.mypy]
 python_version = "3.12"
