@@ -44,6 +44,7 @@ export function ChatHeader({ conversation, viewerId, typing, onOpenDetails }: Ch
           name={titleOf(conversation, viewerId)}
           color={avatar.color}
           imageUrl={avatar.imageUrl}
+          group={avatar.group}
           size={36}
         />
         <span className="min-w-0">
