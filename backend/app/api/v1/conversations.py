@@ -164,7 +164,12 @@ async def send_message(
     bus: BusDep,
 ) -> MessageOut:
     message = await MessageService(session, bus).send(
-        user, conversation_id, payload.client_message_id, payload.body, payload.reply_to_id
+        user,
+        conversation_id,
+        payload.client_message_id,
+        payload.body,
+        payload.reply_to_id,
+        payload.attachment_ids,
     )
     return MessageOut.model_validate(message)
 
