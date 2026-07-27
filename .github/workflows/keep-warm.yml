@@ -1,0 +1,17 @@
+name: keep-warm
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the API health endpoint
+        run: |
+          if [ -z "${{ vars.DEMO_API_URL }}" ]; then
+            echo "DEMO_API_URL repository variable is not set; nothing to ping."
+            exit 0
+          fi
+          curl --silent --show-error --fail --max-time 90 "${{ vars.DEMO_API_URL }}/health"
