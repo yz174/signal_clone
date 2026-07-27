@@ -70,7 +70,7 @@ export function ConversationList({ onCompose, hideOnMobile }: ConversationListPr
 
   return (
     <aside
-      className={`border-line bg-surface md:w-list flex shrink-0 flex-col border-r max-md:w-full ${
+      className={`border-line bg-surface md:w-list flex flex-col border-r max-md:min-w-0 max-md:flex-1 md:shrink-0 ${
         hideOnMobile ? "max-md:hidden" : ""
       }`}
     >

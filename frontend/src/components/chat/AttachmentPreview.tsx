@@ -27,9 +27,8 @@ function ImageAttachment({ attachment }: { attachment: Attachment }) {
   return (
     <a href={attachment.url} target="_blank" rel="noreferrer" className="mt-1 block">
       <div
-        className="bg-surface-sunken relative overflow-hidden rounded-lg"
+        className="bg-surface-sunken relative w-full overflow-hidden rounded-lg"
         style={{
-          width: "min(18rem, 100%)",
           ...(known ? { aspectRatio: String(ratio) } : {}),
           ...(!known && state === "loading" ? { height: "9rem" } : {}),
         }}

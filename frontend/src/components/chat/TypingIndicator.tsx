@@ -1,4 +1,9 @@
-export function TypingIndicator({ names }: { names: string[] }) {
+interface TypingIndicatorProps {
+  names: string[];
+  showNames?: boolean;
+}
+
+export function TypingIndicator({ names, showNames = false }: TypingIndicatorProps) {
   if (names.length === 0) return null;
 
   const label =
@@ -9,17 +14,18 @@ export function TypingIndicator({ names }: { names: string[] }) {
         : `${names[0]} and ${names.length - 1} others are typing`;
 
   return (
-    <div className="flex items-center gap-2 px-4 pb-2" aria-live="polite">
-      <span className="rounded-bubble bg-incoming flex items-center gap-1 px-3 py-2">
+    <div className="mt-2 flex items-end gap-2" role="status" aria-label={label}>
+      <span className="rounded-bubble bg-incoming flex items-center gap-1 px-3.5 py-3">
         {[0, 1, 2].map((dot) => (
           <span
             key={dot}
-            className="bg-faint h-1.5 w-1.5 animate-bounce rounded-full"
-            style={{ animationDelay: `${dot * 120}ms` }}
+            aria-hidden
+            className="bg-faint typing-dot h-1.5 w-1.5 rounded-full"
+            style={{ animationDelay: `${dot * 160}ms` }}
           />
         ))}
       </span>
-      <span className="text-muted text-xs">{label}</span>
+      {showNames && <span className="text-muted text-xs">{label}</span>}
     </div>
   );
 }

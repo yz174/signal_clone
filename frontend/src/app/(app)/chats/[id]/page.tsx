@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { Composer } from "@/components/chat/Composer";
 import { MessageList } from "@/components/chat/MessageList";
-import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { ConversationDetails } from "@/components/modals/ConversationDetails";
 import type { LocalMessage } from "@/lib/api/types";
 import { useChat } from "@/lib/store/chat";
@@ -104,14 +103,13 @@ export default function ConversationPage() {
         viewerId={viewer.id}
         hasMore={current.hasMore}
         loading={current.loading}
+        typingNames={typistNames}
         onLoadOlder={() => void loadOlder(id)}
         onReact={(messageId, emoji) => void toggleReaction(id, messageId, emoji)}
         onReply={(message) => setReply({ conversationId: id, message })}
         onDelete={(messageId) => void deleteMessage(id, messageId)}
         onRetry={(clientMessageId) => void retryMessage(id, clientMessageId)}
       />
-
-      <TypingIndicator names={typistNames} />
 
       <Composer
         replyTo={replyTo}

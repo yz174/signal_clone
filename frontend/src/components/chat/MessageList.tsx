@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { MessageBubble } from "@/components/chat/MessageBubble";
+import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import type { Conversation, LocalMessage } from "@/lib/api/types";
 import { formatDayDivider, isSameDay } from "@/lib/format";
 
@@ -24,6 +25,7 @@ interface MessageListProps {
   viewerId: string;
   hasMore: boolean;
   loading: boolean;
+  typingNames: string[];
   onLoadOlder: () => void;
   onReact: (messageId: string, emoji: string) => void;
   onReply: (message: LocalMessage) => void;
@@ -37,6 +39,7 @@ export function MessageList({
   viewerId,
   hasMore,
   loading,
+  typingNames,
   onLoadOlder,
   onReact,
   onReply,
@@ -49,7 +52,7 @@ export function MessageList({
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [newestSeq, conversation.id]);
+  }, [newestSeq, conversation.id, typingNames.length]);
 
   return (
     <div className="scrollbar-slim flex-1 overflow-y-auto px-4 py-3">
@@ -98,6 +101,8 @@ export function MessageList({
           </div>
         );
       })}
+
+      <TypingIndicator names={typingNames} showNames={conversation.type === "group"} />
 
       <div ref={bottomRef} />
     </div>

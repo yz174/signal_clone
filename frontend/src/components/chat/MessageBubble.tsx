@@ -49,6 +49,8 @@ export function MessageBubble({
   const showSender = !outgoing && conversation.type === "group" && !groupedWithPrevious;
   const showAvatar = !outgoing && conversation.type === "group" && !groupedWithNext;
   const reactions = summariseReactions(message);
+  const hasImage =
+    !message.deleted_at && message.attachments.some((attachment) => attachment.kind === "image");
   const [menuOpen, setMenuOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
 
@@ -99,8 +101,8 @@ export function MessageBubble({
       <div
         ref={container}
         className={`relative max-w-[min(306px,65%)] md:max-w-[370px] xl:max-w-[50vw] ${
-          menuOpen ? "z-50" : ""
-        }`}
+          hasImage ? "w-[min(18rem,100%)] md:w-[21rem]" : ""
+        } ${menuOpen ? "z-50" : ""}`}
       >
         {menuOpen && !message.deleted_at && (
           <MessageActions
