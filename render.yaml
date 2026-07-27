@@ -30,7 +30,9 @@ services:
       - key: SUPABASE_S3_ENDPOINT
         sync: false
       - key: LITESTREAM_BUCKET
-        value: signal-db
+        value: database
+      - key: LITESTREAM_REGION
+        value: ap-northeast-2
       - key: LITESTREAM_ACCESS_KEY_ID
         sync: false
       - key: LITESTREAM_SECRET_ACCESS_KEY

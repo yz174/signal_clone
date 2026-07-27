@@ -251,8 +251,23 @@ types from.
 `POST /conversations/{id}/delivered` · `DELETE /messages/{id}` ·
 `PUT|DELETE /messages/{id}/reaction`
 
+### Attachments
+`POST /attachments/upload-url` · `POST /attachments`
+
+Uploads never pass through the API. `POST /attachments/upload-url` validates the
+declared type and size, then returns a short-lived signed URL the browser uploads
+to directly; `POST /attachments` records the result. The server re-reads the object's
+real size and MIME type from storage rather than trusting what the client declared,
+so the recorded metadata always describes the bytes that actually landed. The API
+process never buffers a file, which matters on a 512MB instance where a single
+large request would otherwise be an OOM kill.
+
+With `STORAGE_BACKEND=local` the ticket points at `PUT /attachments/local/{name}`,
+which streams the body and aborts past the cap — the same contract, so the client
+has one code path in both environments.
+
 ### Other
-`POST /attachments` (multipart) · `GET /search?q=` · `GET /health` · `GET /ready`
+`GET /search?q=` · `GET /health` · `GET /ready`
 
 ### Authorization
 
@@ -296,6 +311,8 @@ npm run verify        # ruff + ruff-format + mypy --strict + pytest, and eslint 
 - Replaying a rotated refresh token revokes every session for that account
 - Search never leaks messages from conversations you are not in
 - An attachment cannot be claimed twice, or claimed by someone who did not upload it
+- An upload token is bound to one object name, and an object registers only once
+- Registered size comes from storage, so a client understating its file changes nothing
 - Migrations match the models (`compare_metadata` finds zero drift)
 
 **Browser checks** drive real Chromium against both servers. These exist because
@@ -413,8 +430,12 @@ The path off this box is two config values and no code change:
 - **Presence and typing are in-memory.** They evaporate on restart, which is correct
   for ephemeral state, but with multiple workers presence needs the Redis bus to be
   accurate.
-- **Litestream is replication, not high availability.** Recovery is restore-on-boot
-  with a ≤10s data-loss window. It is not a cluster and is not presented as one.
+- **Litestream is replication, not high availability.** Recovery is restore-on-boot.
+  It is not a cluster and is not presented as one. Replication is asynchronous, so a
+  loss window is inherent rather than a tuning oversight: a graceful shutdown flushes
+  outstanding WAL frames and loses nothing, but an ungraceful kill can lose up to one
+  `sync-interval` — set to 1s here. Closing that window entirely would require
+  synchronous replication, which means a different database and more than one node.
 - **Attachments are not replicated.** Litestream covers the database only. With
   `STORAGE_BACKEND=local` on an ephemeral host, uploaded files vanish on redeploy —
   which is why production should use `supabase`.
