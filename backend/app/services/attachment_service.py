@@ -2,11 +2,23 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.errors import ForbiddenError, NotFoundError, ValidationError
+from app.core.errors import ConflictError, ForbiddenError, NotFoundError, ValidationError
 from app.models import Attachment, AttachmentKind, User
-from app.services.storage import ALLOWED_TYPES, IMAGE_TYPES, Storage
+from app.services.storage import ALLOWED_TYPES, IMAGE_TYPES, Storage, UploadTicket
 
 MAX_ATTACHMENTS_PER_MESSAGE = 5
+
+
+def _reject_unusable(content_type: str, size_bytes: int) -> None:
+    if content_type not in ALLOWED_TYPES:
+        raise ValidationError(f"{content_type} files are not accepted")
+
+    if size_bytes <= 0:
+        raise ValidationError("The file is empty")
+
+    if size_bytes > settings.max_upload_bytes:
+        limit_mb = settings.max_upload_bytes // (1024 * 1024)
+        raise ValidationError(f"Files must be smaller than {limit_mb}MB")
 
 
 class AttachmentService:
@@ -14,32 +26,33 @@ class AttachmentService:
         self._session = session
         self._storage = storage
 
-    async def upload(
+    async def create_ticket(self, content_type: str, size_bytes: int) -> UploadTicket:
+        _reject_unusable(content_type, size_bytes)
+        return await self._storage.create_upload_ticket(content_type)
+
+    async def register(
         self,
         user: User,
-        content: bytes,
-        content_type: str,
+        object_name: str,
         width: int | None = None,
         height: int | None = None,
     ) -> Attachment:
-        if content_type not in ALLOWED_TYPES:
-            raise ValidationError(f"{content_type} files are not accepted")
+        stored = await self._storage.stat(object_name)
+        if stored is None:
+            raise ValidationError("The upload never reached storage")
 
-        if len(content) == 0:
-            raise ValidationError("The file is empty")
+        _reject_unusable(stored.mime_type, stored.size_bytes)
 
-        if len(content) > settings.max_upload_bytes:
-            limit_mb = settings.max_upload_bytes // (1024 * 1024)
-            raise ValidationError(f"Files must be smaller than {limit_mb}MB")
-
-        url = await self._storage.save(content, content_type)
+        url = self._storage.public_url(object_name)
+        if await self._session.scalar(select(Attachment).where(Attachment.url == url)):
+            raise ConflictError("That upload is already registered")
 
         attachment = Attachment(
             uploaded_by=user.id,
-            kind=AttachmentKind.IMAGE if content_type in IMAGE_TYPES else AttachmentKind.FILE,
+            kind=AttachmentKind.IMAGE if stored.mime_type in IMAGE_TYPES else AttachmentKind.FILE,
             url=url,
-            mime_type=content_type,
-            size_bytes=len(content),
+            mime_type=stored.mime_type,
+            size_bytes=stored.size_bytes,
             width=width,
             height=height,
         )
