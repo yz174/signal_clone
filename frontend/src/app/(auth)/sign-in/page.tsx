@@ -3,13 +3,17 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { DemoAccountPicker } from "@/components/auth/DemoAccountPicker";
 import { SignalLogo } from "@/components/SignalLogo";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
-import { ApiError, api } from "@/lib/api/client";
+import { API_BASE, ApiError, api } from "@/lib/api/client";
+import { DEMO_CODE, formatPhone } from "@/lib/demo-accounts";
 import { useSession } from "@/lib/store/session";
 
 type Step = "phone" | "code" | "profile";
+
+const SLEEPS_WHEN_IDLE = !/localhost|127\.0\.0\.1/.test(API_BASE);
 
 export default function SignInPage() {
   const router = useRouter();
@@ -74,19 +78,21 @@ export default function SignInPage() {
     });
 
   return (
-    <main className="bg-surface flex min-h-full items-center justify-center px-6 py-12">
-      <div className="w-full max-w-sm">
-        <div className="mb-10 flex flex-col items-center text-center">
-          <SignalLogo size={56} className="text-accent" />
-          <h1 className="text-body mt-5 text-2xl font-semibold">Signal</h1>
-          <p className="text-muted mt-2 text-sm">
-            {step === "phone" && "Enter your phone number to get started."}
-            {step === "code" && `We sent a code to ${phone}.`}
+    <main className="bg-surface-sunken flex min-h-full items-center justify-center px-5 py-10">
+      <div className="w-full max-w-md">
+        <div className="mb-7 flex flex-col items-center text-center">
+          <SignalLogo size={48} className="text-accent" />
+          <h1 className="text-body mt-4 text-[26px] leading-tight font-semibold tracking-tight">
+            Signal
+          </h1>
+          <p className="text-muted mt-1.5 text-sm">
+            {step === "phone" && "Enter a phone number to get started."}
+            {step === "code" && `We sent a code to ${formatPhone(phone)}.`}
             {step === "profile" && "Choose how you appear to others."}
           </p>
         </div>
 
-        <div className="space-y-5">
+        <div className="bg-surface border-line space-y-5 rounded-2xl border p-6 shadow-sm">
           {step === "phone" && (
             <>
               <TextField
@@ -97,11 +103,21 @@ export default function SignInPage() {
                 inputMode="tel"
                 autoFocus
                 error={error}
-                hint="Seeded demo accounts run from +15550100001 to +15550100010."
               />
               <Button fullWidth onClick={requestCode} disabled={busy || phone.trim().length < 8}>
-                {busy ? "Sending…" : "Continue"}
+                {!busy ? "Continue" : SLEEPS_WHEN_IDLE ? "Waking the server…" : "Sending…"}
               </Button>
+              {SLEEPS_WHEN_IDLE && (
+                <p
+                  className={`text-xs leading-relaxed ${busy ? "text-muted" : "text-faint"}`}
+                  aria-live="polite"
+                >
+                  {busy
+                    ? "Still waking up. The first request can take up to a minute."
+                    : "The free tier sleeps after 15 minutes idle, so the first Continue can take up to a minute. Instant after that."}
+                </p>
+              )}
+              <DemoAccountPicker selected={phone.trim()} onSelect={setPhone} />
             </>
           )}
 
@@ -111,13 +127,25 @@ export default function SignInPage() {
                 label="Verification code"
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
-                placeholder="123456"
+                placeholder={DEMO_CODE}
                 inputMode="numeric"
                 maxLength={6}
                 autoFocus
                 error={error}
-                hint="Verification is mocked for this demo: the code is 123456."
               />
+              <div className="border-line bg-surface-sunken flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5">
+                <span className="text-muted text-xs">
+                  No SMS is sent. Every account uses the same code.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCode(DEMO_CODE)}
+                  aria-label={`Fill in the code ${DEMO_CODE}`}
+                  className="border-line-strong bg-surface text-accent hover:border-accent shrink-0 rounded-md border px-2 py-1 text-sm font-semibold tabular-nums transition-colors duration-150 ease-out"
+                >
+                  {DEMO_CODE}
+                </button>
+              </div>
               <Button fullWidth onClick={verifyCode} disabled={busy || code.trim().length < 4}>
                 {busy ? "Verifying…" : "Verify"}
               </Button>
@@ -163,7 +191,7 @@ export default function SignInPage() {
           )}
         </div>
 
-        <p className="text-faint mt-10 text-center text-xs">
+        <p className="text-faint mt-6 text-center text-xs">
           Encryption is simulated. This is a portfolio clone, not the real Signal.
         </p>
       </div>

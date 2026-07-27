@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import type { Attachment } from "@/lib/api/types";
 
 function readableSize(bytes: number): string {
@@ -6,20 +10,51 @@ function readableSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function AttachmentPreview({ attachment }: { attachment: Attachment }) {
-  if (attachment.kind === "image") {
+function ImageAttachment({ attachment }: { attachment: Attachment }) {
+  const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
+
+  if (state === "failed") {
     return (
-      <a href={attachment.url} target="_blank" rel="noreferrer" className="mt-1 block">
+      <div className="border-line text-muted mt-1 flex h-24 w-40 items-center justify-center rounded-lg border text-xs">
+        Image unavailable
+      </div>
+    );
+  }
+
+  const ratio = attachment.width && attachment.height ? attachment.width / attachment.height : null;
+  const known = ratio !== null;
+
+  return (
+    <a href={attachment.url} target="_blank" rel="noreferrer" className="mt-1 block">
+      <div
+        className="bg-surface-sunken relative overflow-hidden rounded-lg"
+        style={{
+          width: "min(18rem, 100%)",
+          ...(known ? { aspectRatio: String(ratio) } : {}),
+          ...(!known && state === "loading" ? { height: "9rem" } : {}),
+        }}
+      >
+        {state === "loading" && (
+          <span aria-hidden className="bg-surface-sunken absolute inset-0 animate-pulse" />
+        )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={attachment.url}
           alt="Attachment"
-          width={attachment.width ?? undefined}
-          height={attachment.height ?? undefined}
-          className="max-h-72 w-auto max-w-full rounded-lg object-contain"
+          onLoad={() => setState("ready")}
+          onError={() => setState("failed")}
+          className={`relative transition-opacity duration-300 ease-out ${
+            known ? "h-full w-full object-cover" : "h-auto w-full"
+          } ${state === "ready" ? "opacity-100" : "opacity-0"}`}
         />
-      </a>
-    );
+      </div>
+    </a>
+  );
+}
+
+export function AttachmentPreview({ attachment }: { attachment: Attachment }) {
+  if (attachment.kind === "image") {
+    return <ImageAttachment attachment={attachment} />;
   }
 
   return (
