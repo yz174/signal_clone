@@ -24,6 +24,23 @@ class AttachmentOut(BaseModel):
     height: int | None
 
 
+class UploadTicketIn(BaseModel):
+    content_type: str = Field(min_length=1, max_length=128)
+    size_bytes: int = Field(gt=0)
+
+
+class UploadTicketOut(BaseModel):
+    upload_url: str
+    object_name: str
+    headers: dict[str, str]
+
+
+class AttachmentCreate(BaseModel):
+    object_name: str = Field(min_length=1, max_length=128)
+    width: int | None = Field(default=None, gt=0)
+    height: int | None = Field(default=None, gt=0)
+
+
 class MessageOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

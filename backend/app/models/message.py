@@ -65,6 +65,7 @@ class Message(Base, IdMixin):
 
 class Attachment(Base, IdMixin):
     __tablename__ = "attachments"
+    __table_args__ = (UniqueConstraint("url", name="uq_attachments_url"),)
 
     message_id: Mapped[str | None] = mapped_column(
         String(ID_LENGTH), ForeignKey("messages.id", ondelete="CASCADE"), index=True, default=None
