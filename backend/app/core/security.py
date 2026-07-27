@@ -10,7 +10,7 @@ from argon2.exceptions import VerifyMismatchError
 from app.core.config import settings
 from app.core.errors import UnauthorizedError
 
-TokenType = Literal["access", "registration"]
+TokenType = Literal["access", "registration", "upload"]
 
 _hasher = PasswordHasher()
 
@@ -51,6 +51,10 @@ def create_access_token(user_id: str) -> str:
 
 def create_registration_token(phone_e164: str) -> str:
     return _encode(phone_e164, "registration", settings.otp_ttl_seconds)
+
+
+def create_upload_token(object_name: str) -> str:
+    return _encode(object_name, "upload", settings.upload_token_ttl_seconds)
 
 
 def decode_token(token: str, expected_type: TokenType) -> str:

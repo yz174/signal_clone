@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     upload_dir: str = "uploads"
     public_base_url: str = "http://localhost:8000"
     max_upload_bytes: int = 10 * 1024 * 1024
+    upload_token_ttl_seconds: int = 5 * 60
     supabase_url: str = ""
     supabase_service_key: str = ""
     supabase_bucket: str = "attachments"
