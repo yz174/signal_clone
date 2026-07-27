@@ -10,6 +10,7 @@ import type {
   MessagePage,
   Receipt,
   SearchResults,
+  UploadTicket,
   User,
   VerifyOtpResult,
 } from "./types";
@@ -245,22 +246,29 @@ export const api = {
     }),
 
   uploadAttachment: async (file: File, dimensions?: { width: number; height: number }) => {
-    const form = new FormData();
-    form.append("file", file);
-    if (dimensions) {
-      form.append("width", String(dimensions.width));
-      form.append("height", String(dimensions.height));
-    }
-
-    const token = getAccessToken();
-    const response = await fetch(`${API_BASE}/api/v1/attachments`, {
+    const ticket = await request<UploadTicket>("/attachments/upload-url", {
       method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: form,
+      body: { content_type: file.type, size_bytes: file.size },
     });
 
-    if (!response.ok) throw await toApiError(response);
-    return (await response.json()) as Attachment;
+    const uploaded = await fetch(ticket.upload_url, {
+      method: "PUT",
+      headers: ticket.headers,
+      body: file,
+    });
+
+    if (!uploaded.ok) {
+      throw new ApiError(uploaded.status, "upload_failed", "The file could not be uploaded");
+    }
+
+    return request<Attachment>("/attachments", {
+      method: "POST",
+      body: {
+        object_name: ticket.object_name,
+        width: dimensions?.width ?? null,
+        height: dimensions?.height ?? null,
+      },
+    });
   },
 
   deleteMessage: (messageId: string) =>

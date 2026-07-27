@@ -369,6 +369,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attachments/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Upload Url */
+        post: operations["create_upload_url_api_v1_attachments_upload_url_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attachments": {
         parameters: {
             query?: never;
@@ -378,8 +395,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Upload Attachment */
-        post: operations["upload_attachment_api_v1_attachments_post"];
+        /** Register Attachment */
+        post: operations["register_attachment_api_v1_attachments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attachments/local/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Receive Local Upload */
+        put: operations["receive_local_upload_api_v1_attachments_local__name__put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -394,6 +428,15 @@ export interface components {
         AddMembersIn: {
             /** User Ids */
             user_ids: string[];
+        };
+        /** AttachmentCreate */
+        AttachmentCreate: {
+            /** Object Name */
+            object_name: string;
+            /** Width */
+            width?: number | null;
+            /** Height */
+            height?: number | null;
         };
         /**
          * AttachmentKind
@@ -425,15 +468,6 @@ export interface components {
             status: "authenticated";
             tokens: components["schemas"]["TokenPair"];
             user: components["schemas"]["UserOut"];
-        };
-        /** Body_upload_attachment_api_v1_attachments_post */
-        Body_upload_attachment_api_v1_attachments_post: {
-            /** File */
-            file: string;
-            /** Width */
-            width?: number | null;
-            /** Height */
-            height?: number | null;
         };
         /** ContactCreate */
         ContactCreate: {
@@ -732,6 +766,24 @@ export interface components {
             refresh_token: string;
             /** Expires In */
             expires_in: number;
+        };
+        /** UploadTicketIn */
+        UploadTicketIn: {
+            /** Content Type */
+            content_type: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
+        /** UploadTicketOut */
+        UploadTicketOut: {
+            /** Upload Url */
+            upload_url: string;
+            /** Object Name */
+            object_name: string;
+            /** Headers */
+            headers: {
+                [key: string]: string;
+            };
         };
         /** UserOut */
         UserOut: {
@@ -1695,7 +1747,7 @@ export interface operations {
             };
         };
     };
-    upload_attachment_api_v1_attachments_post: {
+    create_upload_url_api_v1_attachments_upload_url_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1704,7 +1756,40 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["Body_upload_attachment_api_v1_attachments_post"];
+                "application/json": components["schemas"]["UploadTicketIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadTicketOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_attachment_api_v1_attachments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachmentCreate"];
             };
         };
         responses: {
@@ -1716,6 +1801,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AttachmentOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    receive_local_upload_api_v1_attachments_local__name__put: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

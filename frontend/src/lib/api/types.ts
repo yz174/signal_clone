@@ -13,6 +13,7 @@ export type MessagePage = Schemas["MessagePageOut"];
 export type Receipt = Schemas["ReceiptOut"];
 export type Contact = Schemas["ContactOut"];
 export type Attachment = Schemas["AttachmentOut"];
+export type UploadTicket = Schemas["UploadTicketOut"];
 export type SearchResults = Schemas["SearchResultsOut"];
 export type TokenPair = Schemas["TokenPair"];
 export type Authenticated = Schemas["AuthenticatedOut"];
